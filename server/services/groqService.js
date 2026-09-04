@@ -1,0 +1,273 @@
+const Groq = require('groq-sdk');
+
+const SYSTEM_PROMPT = `You are a Senior Code Reviewer with 15+ years of experience in full-stack development.
+Your expertise spans multiple programming languages (JavaScript, Python, Java, C++, TypeScript, Go, Rust).
+Analyze code for bugs, performance, security, and best practices.
+Be precise, actionable, and professional.
+
+IMPORTANT: You MUST respond ONLY with valid JSON. Do not include markdown code block backticks (like \`\`\`json) outside the JSON object.
+Return a single JSON object with the following exact keys:
+{
+  "summary": "Brief 2-sentence executive summary of the code quality and major findings",
+  "qualityScore": 85, // integer 0-100 rating overall code quality
+  "bugs": [
+    {
+      "line": "Line number or range (e.g. 'Line 4' or 'Global')",
+      "issue": "Concise description of the bug or potential runtime exception",
+      "severity": "High", // "High", "Medium", or "Low"
+      "recommendation": "How to fix this issue"
+    }
+  ],
+  "performance": [
+    {
+      "title": "Title of performance bottleneck or inefficiency",
+      "detail": "Detailed explanation of why it is slow or resource intensive",
+      "impact": "High" // "High", "Medium", or "Low"
+    }
+  ],
+  "security": [
+    {
+      "vulnerability": "Security risk or vulnerability name",
+      "riskLevel": "High", // "Critical", "High", "Medium", or "Low"
+      "fix": "Actionable fix or mitigation step"
+    }
+  ],
+  "suggestions": [
+    {
+      "area": "Code Quality / Readability / Architecture",
+      "recommendation": "Best practice suggestion to improve code maintainability"
+    }
+  ],
+  "refactoredCode": "Complete, improved and refactored version of the code with modern standards and comments"
+}`;
+
+/**
+ * Perform code analysis using Groq API or smart fallback generator
+ */
+async function analyzeCode(code, language = 'Auto-detect') {
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey || apiKey.trim() === '' || apiKey.trim() === 'your_groq_api_key_here') {
+    console.log('⚡ GROQ_API_KEY not set or placeholder used. Running in Smart Fallback Mode.');
+    return generateFallbackAnalysis(code, language);
+  }
+
+  const groq = new Groq({ apiKey });
+
+  const userPrompt = `Analyze the following code snippet (Language: ${language}):
+
+\`\`\`
+${code}
+\`\`\`
+
+Provide your full code review in the required structured JSON format. Ensure all 5 categories (bugs, performance, security, suggestions, refactoredCode) are thoroughly analyzed.`;
+
+  try {
+    const startTime = Date.now();
+
+    // Active verified Groq models for this API key
+    const modelsToTry = [
+      'groq/compound-mini',
+      'groq/compound',
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.6-27b'
+    ];
+
+    let response = null;
+    let lastModelError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        response = await groq.chat.completions.create({
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
+          ],
+          model: model,
+          temperature: 0.2,
+          max_tokens: 1500
+        });
+        if (response && response.choices && response.choices[0]?.message?.content) break;
+      } catch (err) {
+        console.warn(`Groq Model [${model}] failed: ${err.message}. Trying next model...`);
+        lastModelError = err;
+      }
+    }
+
+    if (!response) {
+      throw lastModelError || new Error('All Groq AI models failed to respond.');
+    }
+
+    const executionTimeMs = Date.now() - startTime;
+    const content = response.choices[0]?.message?.content || '{}';
+
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(content);
+    } catch (e) {
+      // Clean up markdown block if present
+      const cleaned = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+      parsedResult = JSON.parse(cleaned);
+    }
+
+    return {
+      success: true,
+      executionTimeMs,
+      data: sanitizeAnalysisData(parsedResult, code)
+    };
+  } catch (error) {
+    console.error('Groq API Error:', error.message);
+    
+    // If model name error or key error, try fallback gracefully
+    if (error.status === 401 || error.message.includes('API key')) {
+      console.warn('Invalid Groq API key provided. Falling back to simulated review generator.');
+      return {
+        success: true,
+        executionTimeMs: 450,
+        isFallback: true,
+        data: generateFallbackAnalysis(code, language).data,
+        warning: 'Groq API Key invalid. Showing demonstration review.'
+      };
+    }
+
+    throw new Error(`AI Review failed: ${error.message}`);
+  }
+}
+
+/**
+ * Sanitize and enforce complete object structure
+ */
+function sanitizeAnalysisData(raw, originalCode) {
+  return {
+    summary: raw.summary || 'Code analysis completed successfully.',
+    qualityScore: typeof raw.qualityScore === 'number' ? raw.qualityScore : 75,
+    bugs: Array.isArray(raw.bugs) ? raw.bugs : [],
+    performance: Array.isArray(raw.performance) ? raw.performance : [],
+    security: Array.isArray(raw.security) ? raw.security : [],
+    suggestions: Array.isArray(raw.suggestions) ? raw.suggestions : [],
+    refactoredCode: raw.refactoredCode || originalCode
+  };
+}
+
+/**
+ * Smart Fallback Analysis Generator for instant local offline demos
+ */
+function generateFallbackAnalysis(code, language) {
+  const isPython = code.includes('def ') || code.includes('import ') || language.toLowerCase() === 'python';
+  const isJS = code.includes('function') || code.includes('const ') || code.includes('let ') || language.toLowerCase().includes('javascript');
+  
+  let bugs = [];
+  let performance = [];
+  let security = [];
+  let suggestions = [];
+  let refactoredCode = '';
+
+  if (code.includes('fetch') && !code.includes('try') && !code.includes('.catch')) {
+    bugs.push({
+      line: 'Line 2',
+      issue: 'Unhandled Promise rejection in API call',
+      severity: 'High',
+      recommendation: 'Wrap fetch call in a try/catch block or attach a .catch() handler.'
+    });
+  }
+
+  if (code.includes('console.log') || code.includes('print(')) {
+    suggestions.push({
+      area: 'Logging',
+      recommendation: 'Replace raw print/console statements with a structured logger for production environments.'
+    });
+  }
+
+  if (code.includes('SELECT *') || code.includes('eval(') || code.includes('innerHTML')) {
+    security.push({
+      vulnerability: 'Potential Injection or XSS Vulnerability',
+      riskLevel: 'Critical',
+      fix: 'Sanitize user inputs and use parameterized queries or safe DOM manipulation APIs.'
+    });
+  }
+
+  if (bugs.length === 0) {
+    bugs.push({
+      line: 'Scope Check',
+      issue: 'Missing explicit return statement or bounds checking',
+      severity: 'Low',
+      recommendation: 'Ensure all execution branches explicitly handle error conditions.'
+    });
+  }
+
+  if (performance.length === 0) {
+    performance.push({
+      title: 'Potential Synchronous Bottleneck',
+      detail: 'Iterative operations over data arrays can benefit from asynchronous chunking or memoization.',
+      impact: 'Medium'
+    });
+  }
+
+  if (security.length === 0) {
+    security.push({
+      vulnerability: 'Missing Input Sanitization / Rate Limiting',
+      riskLevel: 'Medium',
+      fix: 'Enforce strict schema validation on input arguments to prevent unexpected data types.'
+    });
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push({
+      area: 'Code Style & Formatting',
+      recommendation: 'Enforce strict type hints / JSDoc annotations to improve IDE IntelliSense and code maintainability.'
+    });
+  }
+
+  if (isJS) {
+    refactoredCode = `// Refactored & Optimized Code (AI Assistant)
+const executeTask = async (payload) => {
+  try {
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Invalid input payload provided');
+    }
+    
+    // Process input cleanly
+    const result = await processData(payload);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('[Service Error]:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+${code}`;
+  } else {
+    refactoredCode = `# Refactored & Optimized Code (AI Assistant)
+from typing import Dict, Any, Optional
+
+def execute_task(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Safely processes payload with error handling and typing."""
+    if not payload:
+        raise ValueError("Invalid or empty payload")
+        
+    try:
+        # Perform computation
+        return {"success": True, "result": payload}
+    except Exception as err:
+        return {"success": False, "error": str(err)}
+
+${code}`;
+  }
+
+  return {
+    success: true,
+    executionTimeMs: 340,
+    isFallback: true,
+    data: {
+      summary: 'Analysis completed. Identified potential error handling gaps and security/performance enhancement opportunities.',
+      qualityScore: 78,
+      bugs,
+      performance,
+      security,
+      suggestions,
+      refactoredCode
+    }
+  };
+}
+
+module.exports = { analyzeCode };
