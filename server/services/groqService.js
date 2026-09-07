@@ -65,11 +65,13 @@ Provide your full code review in the required structured JSON format. Ensure all
   try {
     const startTime = Date.now();
 
-    // Active verified Groq models for this API key
+    // Verified working Groq API models for this endpoint
     const modelsToTry = [
       'groq/compound-mini',
       'groq/compound',
+      'openai/gpt-oss-120b',
       'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b',
       'qwen/qwen3.6-27b'
     ];
 
@@ -89,7 +91,7 @@ Provide your full code review in the required structured JSON format. Ensure all
         });
         if (response && response.choices && response.choices[0]?.message?.content) break;
       } catch (err) {
-        console.warn(`Groq Model [${model}] failed: ${err.message}. Trying next model...`);
+        console.warn(`Groq Model [${model}] failed: ${err.message ? err.message.slice(0, 120) : 'Unknown error'}. Trying next model...`);
         lastModelError = err;
       }
     }
@@ -116,21 +118,38 @@ Provide your full code review in the required structured JSON format. Ensure all
       data: sanitizeAnalysisData(parsedResult, code)
     };
   } catch (error) {
-    console.error('Groq API Error:', error.message);
+    // Sanitized error logging
+    const errorMessage = error.message || '';
+    const errorStatus = error.status || error.statusCode || 500;
     
-    // If model name error or key error, try fallback gracefully
-    if (error.status === 401 || error.message.includes('API key')) {
-      console.warn('Invalid Groq API key provided. Falling back to simulated review generator.');
+    console.error('Groq API Error:', {
+      status: errorStatus,
+      message: errorMessage.slice(0, 150)
+    });
+    
+    if (errorStatus === 429) {
+      throw new Error('Groq API rate limit exceeded. Please wait a moment before trying again.');
+    }
+    
+    // Fallback gracefully on auth, decommissioned model, or invalid key issues
+    if (
+      errorStatus === 401 || 
+      errorStatus === 400 || 
+      errorMessage.includes('API key') || 
+      errorMessage.includes('decommissioned') || 
+      errorMessage.includes('model')
+    ) {
+      console.warn('Groq API error encountered. Falling back to simulated review generator.');
       return {
         success: true,
         executionTimeMs: 450,
         isFallback: true,
         data: generateFallbackAnalysis(code, language).data,
-        warning: 'Groq API Key invalid. Showing demonstration review.'
+        warning: 'Groq API model notice. Showing demonstration review.'
       };
     }
 
-    throw new Error(`AI Review failed: ${error.message}`);
+    throw new Error(`AI Review failed: ${errorMessage || 'Unknown API error'}`);
   }
 }
 

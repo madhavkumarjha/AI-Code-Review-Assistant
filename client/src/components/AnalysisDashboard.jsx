@@ -1,7 +1,155 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { Bug, Zap, ShieldAlert, Lightbulb, Code2, Check, Copy, AlertTriangle, ShieldCheck } from 'lucide-react';
 import ExportPanel from './ExportPanel';
+
+const getSeverityBadge = (level) => {
+  const l = (level || 'medium').toLowerCase();
+  if (l === 'high' || l === 'critical') return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+  if (l === 'medium') return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+  return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+};
+
+const BugSection = React.memo(({ bugs }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+    <div className="flex items-center space-x-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
+      <Bug className="w-4 h-4" />
+      <span>Bugs & Potential Exceptions ({bugs.length})</span>
+    </div>
+    {bugs.length === 0 ? (
+      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+        ✅ No critical bugs detected.
+      </div>
+    ) : (
+      bugs.map((bug, i) => (
+        <div key={i} className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 text-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-rose-300 font-mono">{bug.line || 'Code Scope'}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getSeverityBadge(bug.severity)}`}>
+              {bug.severity || 'High'}
+            </span>
+          </div>
+          <p className="text-slate-200 font-medium">{bug.issue}</p>
+          <p className="text-slate-400 text-[11px]"><strong className="text-rose-400">Fix:</strong> {bug.recommendation}</p>
+        </div>
+      ))
+    )}
+  </motion.div>
+));
+
+BugSection.displayName = 'BugSection';
+BugSection.propTypes = {
+  bugs: PropTypes.array.isRequired
+};
+
+const PerformanceSection = React.memo(({ performance }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+    <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+      <Zap className="w-4 h-4" />
+      <span>Performance & Optimization ({performance.length})</span>
+    </div>
+    {performance.length === 0 ? (
+      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+        ⚡ Code logic appears runtime efficient.
+      </div>
+    ) : (
+      performance.map((item, i) => (
+        <div key={i} className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-amber-300">{item.title}</span>
+            <span className="text-[10px] text-amber-400/80 font-mono">Impact: {item.impact || 'Medium'}</span>
+          </div>
+          <p className="text-slate-300 text-[11px]">{item.detail}</p>
+        </div>
+      ))
+    )}
+  </motion.div>
+));
+
+PerformanceSection.displayName = 'PerformanceSection';
+PerformanceSection.propTypes = {
+  performance: PropTypes.array.isRequired
+};
+
+const SecuritySection = React.memo(({ security }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+    <div className="flex items-center space-x-2 text-xs font-bold text-purple-400 uppercase tracking-wider">
+      <ShieldAlert className="w-4 h-4" />
+      <span>Security Scanning & Vulnerabilities ({security.length})</span>
+    </div>
+    {security.length === 0 ? (
+      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+        🔒 No security vulnerabilities detected.
+      </div>
+    ) : (
+      security.map((sec, i) => (
+        <div key={i} className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-purple-300">{sec.vulnerability}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getSeverityBadge(sec.riskLevel)}`}>
+              {sec.riskLevel || 'Medium'} Risk
+            </span>
+          </div>
+          <p className="text-slate-300 text-[11px]"><strong className="text-purple-400">Mitigation:</strong> {sec.fix}</p>
+        </div>
+      ))
+    )}
+  </motion.div>
+));
+
+SecuritySection.displayName = 'SecuritySection';
+SecuritySection.propTypes = {
+  security: PropTypes.array.isRequired
+};
+
+const SuggestionsSection = React.memo(({ suggestions }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+    <div className="flex items-center space-x-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+      <Lightbulb className="w-4 h-4" />
+      <span>Best Practice Suggestions ({suggestions.length})</span>
+    </div>
+    {suggestions.map((s, i) => (
+      <div key={i} className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs flex space-x-2 items-start">
+        <span className="font-semibold text-cyan-300 shrink-0">{s.area}:</span>
+        <span className="text-slate-300 text-[11px]">{s.recommendation}</span>
+      </div>
+    ))}
+  </motion.div>
+));
+
+SuggestionsSection.displayName = 'SuggestionsSection';
+SuggestionsSection.propTypes = {
+  suggestions: PropTypes.array.isRequired
+};
+
+const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopied }) => (
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+        <Code2 className="w-4 h-4" />
+        <span>AI Refactored Code</span>
+      </div>
+      <button
+        onClick={handleCopyCode}
+        className="inline-flex items-center space-x-1 text-[11px] text-emerald-400 hover:text-emerald-300 font-mono"
+      >
+        {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+        <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
+      </button>
+    </div>
+    <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6">
+      <pre><code>{refactoredCode}</code></pre>
+    </div>
+  </motion.div>
+));
+
+RefactoredSection.displayName = 'RefactoredSection';
+RefactoredSection.propTypes = {
+  refactoredCode: PropTypes.string,
+  handleCopyCode: PropTypes.func.isRequired,
+  codeCopied: PropTypes.bool.isRequired
+};
 
 export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCode }) {
   const [activeTab, setActiveTab] = useState('all');
@@ -23,19 +171,10 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
 
   const { summary, qualityScore = 80, bugs = [], performance = [], security = [], suggestions = [], refactoredCode } = analysisData;
 
-  const totalIssues = bugs.length + security.length;
-
   const getScoreColor = (score) => {
     if (score >= 85) return 'text-emerald-400 border-emerald-500/30 bg-emerald-950/30';
     if (score >= 65) return 'text-amber-400 border-amber-500/30 bg-amber-950/30';
     return 'text-rose-400 border-rose-500/30 bg-rose-950/30';
-  };
-
-  const getSeverityBadge = (level) => {
-    const l = (level || 'medium').toLowerCase();
-    if (l === 'high' || l === 'critical') return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
-    if (l === 'medium') return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-    return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
   };
 
   const handleCopyCode = () => {
@@ -116,120 +255,31 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
 
         {/* 1. BUGS SECTION */}
         {(activeTab === 'all' || activeTab === 'bugs') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-            <div className="flex items-center space-x-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
-              <Bug className="w-4 h-4" />
-              <span>Bugs & Potential Exceptions ({bugs.length})</span>
-            </div>
-            {bugs.length === 0 ? (
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
-                ✅ No critical bugs detected.
-              </div>
-            ) : (
-              bugs.map((bug, i) => (
-                <div key={i} className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-rose-300 font-mono">{bug.line || 'Code Scope'}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getSeverityBadge(bug.severity)}`}>
-                      {bug.severity || 'High'}
-                    </span>
-                  </div>
-                  <p className="text-slate-200 font-medium">{bug.issue}</p>
-                  <p className="text-slate-400 text-[11px]"><strong className="text-rose-400">Fix:</strong> {bug.recommendation}</p>
-                </div>
-              ))
-            )}
-          </motion.div>
+          <BugSection bugs={bugs} />
         )}
 
         {/* 2. PERFORMANCE SECTION */}
         {(activeTab === 'all' || activeTab === 'performance') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
-            <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-              <Zap className="w-4 h-4" />
-              <span>Performance & Optimization ({performance.length})</span>
-            </div>
-            {performance.length === 0 ? (
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
-                ⚡ Code logic appears runtime efficient.
-              </div>
-            ) : (
-              performance.map((item, i) => (
-                <div key={i} className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-amber-300">{item.title}</span>
-                    <span className="text-[10px] text-amber-400/80 font-mono">Impact: {item.impact || 'Medium'}</span>
-                  </div>
-                  <p className="text-slate-300 text-[11px]">{item.detail}</p>
-                </div>
-              ))
-            )}
-          </motion.div>
+          <PerformanceSection performance={performance} />
         )}
 
         {/* 3. SECURITY SECTION */}
         {(activeTab === 'all' || activeTab === 'security') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
-            <div className="flex items-center space-x-2 text-xs font-bold text-purple-400 uppercase tracking-wider">
-              <ShieldAlert className="w-4 h-4" />
-              <span>Security Scanning & Vulnerabilities ({security.length})</span>
-            </div>
-            {security.length === 0 ? (
-              <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
-                🔒 No security vulnerabilities detected.
-              </div>
-            ) : (
-              security.map((sec, i) => (
-                <div key={i} className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-purple-300">{sec.vulnerability}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getSeverityBadge(sec.riskLevel)}`}>
-                      {sec.riskLevel || 'Medium'} Risk
-                    </span>
-                  </div>
-                  <p className="text-slate-300 text-[11px]"><strong className="text-purple-400">Mitigation:</strong> {sec.fix}</p>
-                </div>
-              ))
-            )}
-          </motion.div>
+          <SecuritySection security={security} />
         )}
 
         {/* 4. SUGGESTIONS / BEST PRACTICES SECTION */}
-        {(activeTab === 'all') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
-            <div className="flex items-center space-x-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-              <Lightbulb className="w-4 h-4" />
-              <span>Best Practice Suggestions ({suggestions.length})</span>
-            </div>
-            {suggestions.map((s, i) => (
-              <div key={i} className="p-3 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs flex space-x-2 items-start">
-                <span className="font-semibold text-cyan-300 shrink-0">{s.area}:</span>
-                <span className="text-slate-300 text-[11px]">{s.recommendation}</span>
-              </div>
-            ))}
-          </motion.div>
+        {activeTab === 'all' && (
+          <SuggestionsSection suggestions={suggestions} />
         )}
 
         {/* 5. REFACTORED CODE BLOCK */}
         {(activeTab === 'all' || activeTab === 'refactored') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                <Code2 className="w-4 h-4" />
-                <span>AI Refactored Code</span>
-              </div>
-              <button
-                onClick={handleCopyCode}
-                className="inline-flex items-center space-x-1 text-[11px] text-emerald-400 hover:text-emerald-300 font-mono"
-              >
-                {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
-              </button>
-            </div>
-            <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6">
-              <pre><code>{refactoredCode}</code></pre>
-            </div>
-          </motion.div>
+          <RefactoredSection
+            refactoredCode={refactoredCode}
+            handleCopyCode={handleCopyCode}
+            codeCopied={codeCopied}
+          />
         )}
 
       </div>
@@ -245,3 +295,18 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
     </div>
   );
 }
+
+AnalysisDashboard.propTypes = {
+  analysisData: PropTypes.shape({
+    summary: PropTypes.string,
+    qualityScore: PropTypes.number,
+    bugs: PropTypes.array,
+    performance: PropTypes.array,
+    security: PropTypes.array,
+    suggestions: PropTypes.array,
+    refactoredCode: PropTypes.string
+  }),
+  executionTimeMs: PropTypes.number,
+  rawCode: PropTypes.string
+};
+

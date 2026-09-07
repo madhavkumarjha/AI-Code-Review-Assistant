@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
-import { Play, Upload, Trash2, Code2, Sparkles } from 'lucide-react';
+import React, { useRef, useState, useMemo } from 'react';
+import PropTypes from 'prop-types';
+import { Play, Upload, Trash2, Code2, Sparkles, Loader2 } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
 
 export default function CodeInput({
@@ -12,9 +13,10 @@ export default function CodeInput({
   onFileUpload
 }) {
   const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Calculate line numbers strictly from code splits
-  const lines = code ? code.split('\n') : [''];
+  // Memoize line numbers calculation to prevent expensive recalculations on every render
+  const lines = useMemo(() => (code ? code.split('\n') : ['']), [code]);
   const lineCount = lines.length;
 
   const handlePresetSelect = (preset) => {
@@ -22,10 +24,15 @@ export default function CodeInput({
     setLanguage(preset.language);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      onFileUpload(file);
+      setIsUploading(true);
+      try {
+        await onFileUpload(file);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -66,17 +73,23 @@ export default function CodeInput({
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all"
+            disabled={isUploading || isAnalyzing}
+            className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all"
             title="Upload code file (.js, .py, .java, .cpp)"
           >
-            <Upload className="w-3.5 h-3.5 text-blue-400" />
-            <span>Upload File</span>
+            {isUploading ? (
+              <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+            ) : (
+              <Upload className="w-3.5 h-3.5 text-blue-400" />
+            )}
+            <span>{isUploading ? 'Uploading...' : 'Upload File'}</span>
           </button>
 
           {code && (
             <button
               onClick={() => setCode('')}
-              className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-red-950/50 text-slate-400 hover:text-red-400 border border-slate-700 transition-all"
+              disabled={isAnalyzing}
+              className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-red-950/50 disabled:opacity-50 text-slate-400 hover:text-red-400 border border-slate-700 transition-all"
               title="Clear Editor"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -97,7 +110,8 @@ export default function CodeInput({
             <button
               key={preset.id}
               onClick={() => handlePresetSelect(preset)}
-              className="text-left px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 transition-all group"
+              disabled={isAnalyzing}
+              className="text-left px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 hover:border-cyan-500/50 transition-all group"
             >
               <div className="text-xs font-medium text-slate-200 group-hover:text-cyan-300 truncate">
                 {preset.name}
@@ -110,10 +124,10 @@ export default function CodeInput({
         </div>
       </div>
 
-      {/* Code Editor Container - Unified Scroll Engine (Identical to Analysis Dashboard) */}
+      {/* Code Editor Container */}
       <div className="relative flex-1 min-h-[480px] max-h-[520px] bg-slate-950 rounded-xl border border-slate-800 overflow-y-auto flex flex-row items-stretch font-mono text-sm">
         
-        {/* Line Numbers Column - Grows naturally with code */}
+        {/* Line Numbers Column */}
         <div
           className="w-12 py-3 bg-slate-900/80 text-slate-500 text-right pr-3 select-none border-r border-slate-800/80 shrink-0 pointer-events-none"
           style={{
@@ -130,7 +144,7 @@ export default function CodeInput({
           ))}
         </div>
 
-        {/* Textarea Input - Inner scroll disabled, outer container handles smooth scrolling */}
+        {/* Textarea Input */}
         <textarea
           value={code}
           onChange={(e) => setCode(e.target.value)}
@@ -159,9 +173,9 @@ export default function CodeInput({
 
         <button
           onClick={onAnalyze}
-          disabled={isAnalyzing || !code.trim()}
+          disabled={isAnalyzing || isUploading || !code.trim()}
           className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center space-x-2 transition-all duration-200 ${
-            isAnalyzing || !code.trim()
+            isAnalyzing || isUploading || !code.trim()
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
               : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 active:scale-95'
           }`}
@@ -183,3 +197,14 @@ export default function CodeInput({
     </div>
   );
 }
+
+CodeInput.propTypes = {
+  code: PropTypes.string.isRequired,
+  setCode: PropTypes.func.isRequired,
+  language: PropTypes.string.isRequired,
+  setLanguage: PropTypes.func.isRequired,
+  onAnalyze: PropTypes.func.isRequired,
+  isAnalyzing: PropTypes.bool.isRequired,
+  onFileUpload: PropTypes.func.isRequired
+};
+
