@@ -174,9 +174,33 @@ ${analysisData.refactoredCode}
     doc.save(`Code_Review_Report_${Date.now()}.pdf`);
   };
 
-  const handleShare = () => {
-    setShared(true);
-    setTimeout(() => setShared(false), 2000);
+  const handleShare = async () => {
+    const shareText = `AI Code Review Report (Score: ${analysisData.qualityScore}/100)\n${analysisData.summary}`;
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'AI Code Review Report',
+          text: shareText,
+          url: shareUrl
+        });
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return; // User cancelled share dialog
+      }
+    }
+
+    // Fallback: Copy link to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch (e) {
+      console.error('Failed to copy share link:', e);
+    }
   };
 
   return (
@@ -219,10 +243,11 @@ ${analysisData.refactoredCode}
         {/* Share */}
         <button
           onClick={handleShare}
-          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all"
-          title="Share Review Link"
+          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+          title="Share Review Link or Summary"
         >
-          {shared ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+          {shared ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+          <span>{shared ? 'Link Copied!' : 'Share'}</span>
         </button>
 
       </div>

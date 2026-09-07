@@ -184,10 +184,10 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-slate-800 flex flex-col h-full shadow-2xl relative">
+    <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden">
       
       {/* Top Header & Quality Score KPI */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800/80 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-800/80 mb-3 shrink-0">
         <div>
           <div className="flex items-center space-x-2">
             <h2 className="text-lg font-bold text-slate-100">Analysis Results</h2>
@@ -213,7 +213,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       </div>
 
       {/* Tabs Bar */}
-      <div className="flex items-center space-x-1 overflow-x-auto pb-2 mb-4 border-b border-slate-800/60 text-xs font-medium">
+      <div className="flex items-center space-x-1 overflow-x-auto pb-2 mb-3 border-b border-slate-800/60 text-xs font-medium shrink-0">
         <button
           onClick={() => setActiveTab('all')}
           className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${activeTab === 'all' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'}`}
@@ -250,8 +250,8 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 space-y-4 overflow-y-auto max-h-[500px] pr-1">
+      {/* Main Content Area (Fills remaining panel height with internal scroll) */}
+      <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1">
 
         {/* 1. BUGS SECTION */}
         {(activeTab === 'all' || activeTab === 'bugs') && (

@@ -37,10 +37,10 @@ export default function CodeInput({
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-5 border border-slate-800 flex flex-col h-full min-h-[600px] shadow-2xl relative">
+    <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden">
       
       {/* Top Bar Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3 shrink-0">
         
         {/* Language Selector */}
         <div className="flex items-center space-x-2">
@@ -101,9 +101,9 @@ export default function CodeInput({
       </div>
 
       {/* Sample Presets Quick Loader */}
-      <div className="mb-4">
-        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
-          <Sparkles className="w-3 h-3 mr-1 text-cyan-400" /> 1-Click Portfolio Demo Samples:
+      <div className="mb-3 shrink-0">
+        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center">
+          <Sparkles className="w-3 h-3 mr-1 text-cyan-400" /> 1-Click Sample Presets:
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {SAMPLE_PRESETS.map((preset) => (
@@ -111,12 +111,12 @@ export default function CodeInput({
               key={preset.id}
               onClick={() => handlePresetSelect(preset)}
               disabled={isAnalyzing}
-              className="text-left px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 hover:border-cyan-500/50 transition-all group"
+              className="text-left px-2 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 hover:border-cyan-500/50 transition-all group"
             >
-              <div className="text-xs font-medium text-slate-200 group-hover:text-cyan-300 truncate">
+              <div className="text-[11px] font-medium text-slate-200 group-hover:text-cyan-300 truncate">
                 {preset.name}
               </div>
-              <div className="text-[10px] text-slate-500 truncate">
+              <div className="text-[9px] text-slate-500 truncate">
                 {preset.language}
               </div>
             </button>
@@ -124,21 +124,20 @@ export default function CodeInput({
         </div>
       </div>
 
-      {/* Code Editor Container */}
-      <div className="relative flex-1 min-h-[480px] max-h-[520px] bg-slate-950 rounded-xl border border-slate-800 overflow-y-auto flex flex-row items-stretch font-mono text-sm">
+      {/* Code Editor Container (Fills remaining height) */}
+      <div className="relative flex-1 min-h-0 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden flex flex-row items-stretch font-mono text-sm">
         
         {/* Line Numbers Column */}
         <div
-          className="w-12 py-3 bg-slate-900/80 text-slate-500 text-right pr-3 select-none border-r border-slate-800/80 shrink-0 pointer-events-none"
+          className="w-11 py-3 bg-slate-900/80 text-slate-500 text-right pr-2 select-none border-r border-slate-800/80 shrink-0 pointer-events-none overflow-hidden"
           style={{
             fontFamily: "'Fira Code', Consolas, Monaco, monospace",
-            fontSize: '14px',
-            lineHeight: '24px',
-            minHeight: '100%'
+            fontSize: '13px',
+            lineHeight: '22px'
           }}
         >
           {lines.map((_, i) => (
-            <div key={i + 1} style={{ height: '24px', lineHeight: '24px' }}>
+            <div key={i + 1} style={{ height: '22px', lineHeight: '22px' }}>
               {i + 1}
             </div>
           ))}
@@ -149,13 +148,13 @@ export default function CodeInput({
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="// Paste your code here or select a 1-click sample preset above...&#10;&#10;function calculateTotal(items) {&#10;  return items.reduce((acc, item) => acc + item.price, 0);&#10;}"
-          className="flex-1 w-full py-3 px-4 bg-transparent text-slate-100 placeholder-slate-600 resize-none focus:outline-none overflow-hidden whitespace-pre border-none outline-none block"
+          className="flex-1 w-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 resize-none focus:outline-none overflow-y-auto whitespace-pre border-none outline-none block"
           style={{
             fontFamily: "'Fira Code', Consolas, Monaco, monospace",
-            fontSize: '14px',
-            lineHeight: '24px',
+            fontSize: '13px',
+            lineHeight: '22px',
             tabSize: 4,
-            height: `${Math.max(lineCount * 24 + 24, 480)}px`,
+            height: '100%',
             minHeight: '100%',
             boxSizing: 'border-box'
           }}

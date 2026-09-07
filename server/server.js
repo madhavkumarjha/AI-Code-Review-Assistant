@@ -18,6 +18,13 @@ if (missingVars.length > 0) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Enable trust proxy for reverse proxies (Render, Vercel, Nginx, Cloudflare)
+const trustProxyVal = process.env.TRUST_PROXY !== undefined 
+  ? (isNaN(Number(process.env.TRUST_PROXY)) ? process.env.TRUST_PROXY : Number(process.env.TRUST_PROXY)) 
+  : 1;
+app.set('trust proxy', trustProxyVal);
+
+
 // Configurable CORS
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? [process.env.ALLOWED_ORIGIN || 'https://yourdomain.com'] 

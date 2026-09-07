@@ -3,8 +3,8 @@ import { ShieldCheck, Zap, Cpu } from 'lucide-react';
 
 export default function Header({ isAnalyzing }) {
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3 mb-6">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <header className="h-[64px] shrink-0 glass-panel border-b border-slate-800/80 px-4 lg:px-8 flex items-center z-50">
+      <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between">
         
         {/* Logo & Branding */}
         <div className="flex items-center space-x-3">

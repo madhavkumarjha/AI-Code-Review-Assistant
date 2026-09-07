@@ -42,38 +42,75 @@ Return a single JSON object with the following exact keys:
 }`;
 
 /**
+ * Quick heuristic language auto-detector for un-specified or 'Auto-detect' snippets
+ */
+function detectLanguage(code) {
+  if (!code) return 'JavaScript';
+  const trimmed = code.trim();
+  if (trimmed.includes('def ') || trimmed.includes('print(') || (trimmed.includes('import ') && (trimmed.includes('sys') || trimmed.includes('os') || trimmed.includes('pandas') || trimmed.includes('numpy')))) {
+    return 'Python';
+  }
+  if (trimmed.includes('public class ') || trimmed.includes('System.out.println') || trimmed.includes('public static void main')) {
+    return 'Java';
+  }
+  if (trimmed.includes('#include') || trimmed.includes('std::cout') || trimmed.includes('using namespace std;')) {
+    return 'C++';
+  }
+  if (trimmed.includes('package main') || trimmed.includes('func main()') || trimmed.includes('fmt.Println')) {
+    return 'Go';
+  }
+  if (trimmed.includes('fn main()') || trimmed.includes('let mut ') || trimmed.includes('impl ')) {
+    return 'Rust';
+  }
+  if (trimmed.includes('interface ') || (trimmed.includes(': string') && trimmed.includes('const ')) || trimmed.includes('<React.FC')) {
+    return 'TypeScript';
+  }
+  if (trimmed.includes('function') || trimmed.includes('const ') || trimmed.includes('let ') || trimmed.includes('console.log') || trimmed.includes('=>')) {
+    return 'JavaScript';
+  }
+  return 'General Snippet';
+}
+
+/**
  * Perform code analysis using Groq API or smart fallback generator
  */
 async function analyzeCode(code, language = 'Auto-detect') {
   const apiKey = process.env.GROQ_API_KEY;
 
+  const resolvedLanguage = (!language || language === 'Auto-detect') 
+    ? detectLanguage(code) 
+    : language;
+
   if (!apiKey || apiKey.trim() === '' || apiKey.trim() === 'your_groq_api_key_here') {
     console.log('⚡ GROQ_API_KEY not set or placeholder used. Running in Smart Fallback Mode.');
-    return generateFallbackAnalysis(code, language);
+    return generateFallbackAnalysis(code, resolvedLanguage);
   }
 
   const groq = new Groq({ apiKey });
 
-  const userPrompt = `Analyze the following code snippet (Language: ${language}):
+  const userPrompt = `Analyze the following code snippet (Detected/Specified Language: ${resolvedLanguage}):
 
 \`\`\`
 ${code}
-\`\`\`
+\`\`\`;
 
 Provide your full code review in the required structured JSON format. Ensure all 5 categories (bugs, performance, security, suggestions, refactoredCode) are thoroughly analyzed.`;
 
   try {
     const startTime = Date.now();
 
-    // Verified working Groq API models for this endpoint
+    // Official active Groq API models for chat completions
     const modelsToTry = [
       'groq/compound-mini',
       'groq/compound',
+      'qwen/qwen3.8-27b',
+      'qwen/qwen3.6-27b',
       'openai/gpt-oss-120b',
       'openai/gpt-oss-20b',
-      'qwen/qwen3.8-27b',
-      'qwen/qwen3.6-27b'
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant'
     ];
+
 
     let response = null;
     let lastModelError = null;

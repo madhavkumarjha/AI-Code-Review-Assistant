@@ -3,9 +3,10 @@ const router = express.Router();
 const upload = require('../middleware/upload');
 const { analyzeCode } = require('../services/groqService');
 
-// In-memory cache for fast repeated analysis requests
+// In-memory cache with TTL (1 hour) for fast repeated analysis requests
 const responseCache = new Map();
 const MAX_CACHE_SIZE = 100;
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour TTL
 
 // Sanitize code input (removes non-printable control characters)
 const sanitizeCode = (input) => {
@@ -67,25 +68,31 @@ router.post('/', upload.single('file'), async (req, res) => {
     // Sanitize input code
     const code = sanitizeCode(rawCode);
 
-    // Cache lookup
+    // Cache lookup with TTL check
     const cacheKey = `${language}:${code}`;
     if (responseCache.has(cacheKey)) {
-      const cachedResponse = responseCache.get(cacheKey);
-      return res.status(200).json({
-        ...cachedResponse,
-        isCached: true
-      });
+      const cached = responseCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return res.status(200).json({
+          ...cached.data,
+          isCached: true
+        });
+      } else {
+        responseCache.delete(cacheKey); // Evict expired entry
+      }
     }
 
     // Perform LLM Analysis
     const result = await analyzeCode(code, language);
 
-    // Cache result (maintain cache bounds)
-    if (responseCache.size >= MAX_CACHE_SIZE) {
-      const firstKey = responseCache.keys().next().value;
-      responseCache.delete(firstKey);
+    // Cache result with timestamp (only cache genuine LLM responses, never fallback mode)
+    if (result && !result.isFallback) {
+      if (responseCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = responseCache.keys().next().value;
+        responseCache.delete(firstKey);
+      }
+      responseCache.set(cacheKey, { timestamp: Date.now(), data: result });
     }
-    responseCache.set(cacheKey, result);
 
     return res.status(200).json(result);
   } catch (error) {
