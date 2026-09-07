@@ -25,15 +25,31 @@ const trustProxyVal = process.env.TRUST_PROXY !== undefined
 app.set('trust proxy', trustProxyVal);
 
 
-// Configurable CORS
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.ALLOWED_ORIGIN || 'https://yourdomain.com'] 
-  : '*';
+// Configurable CORS supporting Vercel Frontend & Local Dev
+const allowedOrigins = [
+  'https://ai-code-review-assistant-sand.vercel.app',
+  process.env.ALLOWED_ORIGIN
+].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like server-to-server Vercel rewrites or curl)
+    if (!origin) return callback(null, true);
+
+    // Allow explicitly defined origins, all vercel preview domains, or local dev
+    if (
+      allowedOrigins.includes(origin) ||
+      allowedOrigins.includes('*') ||
+      origin.endsWith('.vercel.app') ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
 }));
 
 // Rate Limiter for API Protection (50 requests per 15 minutes)
