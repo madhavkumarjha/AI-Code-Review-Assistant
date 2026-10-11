@@ -18,6 +18,7 @@ OBJECTIVE SCORING RUBRIC (0-100 scale):
 - Critical Calibration & Anti-Regression Rules:
   * Strict Definition of a Bug: A "Bug" MUST be an actual runtime error, crash, uncaught promise rejection, data corruption, or fatal logic flaw.
   * DO NOT classify harmless defensive fallbacks (e.g. Math.min/Math.max clamping), stylistic preferences, comment phrasing differences, or optional typing as Bugs. Place these in "suggestions".
+  * Context & Environment Assumptions: Submitted snippets are modular controllers, route handlers, or functions. DO NOT flag standard environment variables (e.g. process.env.JWT_SECRET, process.env.PORT, process.env.NODE_ENV) or imported connection pools as "High Severity Bugs" on the assumption they might be undefined. In snippets, assume standard environment configuration exists. If suggesting environment schema validation, place it strictly in "suggestions".
   * If code has 0 bugs and 0 security issues and clean structure, the score MUST be between 94 and 100.
   * When reviewing already refactored, modern, or optimized code, celebrate and award its quality (95-100). Do NOT invent artificial flaws or phantom bugs to fill the response. If there are no bugs, return "bugs": [].
   * Refactored iterations MUST demonstrate clear, monotonically increasing quality (e.g., 65 -> 80 -> 95+), never regressing due to hyper-critical nitpicking.
@@ -227,9 +228,18 @@ function calibrateQualityScore(rawScore, findings) {
 
   let penalty = 0;
   for (const b of bugs) {
-    const sev = (b.severity || '').toLowerCase();
+    const issueText = `${b.issue || ''} ${b.recommendation || ''}`.toLowerCase();
+    let sev = (b.severity || '').toLowerCase();
+
+    // False-positive normalization: Environment variable availability & stylistic opinions are not High severity bugs
+    if (issueText.includes('process.env') || issueText.includes('environment variable') || issueText.includes('limit 1') || issueText.includes('jsdoc')) {
+      sev = 'low';
+      b.severity = 'Low';
+    }
+
     penalty += (sev.includes('high') || sev.includes('crit')) ? 18 : sev.includes('med') ? 10 : 4;
   }
+
   for (const s of security) {
     const risk = (s.riskLevel || '').toLowerCase();
     penalty += (risk.includes('high') || risk.includes('crit')) ? 18 : risk.includes('med') ? 10 : 4;
@@ -239,17 +249,33 @@ function calibrateQualityScore(rawScore, findings) {
     penalty += (imp.includes('high') || imp.includes('crit')) ? 12 : imp.includes('med') ? 7 : 3;
   }
   for (const _ of suggestions) {
-    penalty += 2;
+    penalty += 1;
   }
 
   const calculatedBase = Math.max(25, Math.min(100, 100 - penalty));
 
-  // If 0 bugs and 0 security risks, reward the clean code with 92-100
-  if (bugs.length === 0 && security.length === 0) {
-    if (typeof rawScore === 'number' && !isNaN(rawScore) && rawScore >= 80) {
-      return Math.max(92, Math.min(100, Math.round((rawScore + calculatedBase) / 2)));
+  const hasHighOrCritBugs = bugs.some(b => {
+    const s = (b.severity || '').toLowerCase();
+    return s.includes('high') || s.includes('crit');
+  });
+  const hasHighOrCritSecurity = security.some(s => {
+    const r = (s.riskLevel || '').toLowerCase();
+    return r.includes('high') || r.includes('crit');
+  });
+
+  // If 0 critical/high bugs and 0 security risks
+  if (!hasHighOrCritBugs && !hasHighOrCritSecurity) {
+    if (bugs.length === 0 && security.length === 0) {
+      if (typeof rawScore === 'number' && !isNaN(rawScore) && rawScore >= 75) {
+        return Math.max(94, Math.min(100, Math.round((rawScore + calculatedBase) / 2)));
+      }
+      return Math.max(92, calculatedBase);
     }
-    return Math.max(90, calculatedBase);
+    // Only minor/low findings: floor at 88
+    const blended = (typeof rawScore === 'number' && !isNaN(rawScore))
+      ? Math.round((rawScore * 0.35) + (calculatedBase * 0.65))
+      : calculatedBase;
+    return Math.max(88, Math.min(100, blended));
   }
 
   if (typeof rawScore === 'number' && !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100) {
