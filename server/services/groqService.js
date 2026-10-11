@@ -5,11 +5,34 @@ Your expertise spans multiple programming languages (JavaScript, Python, Java, C
 Analyze code for bugs, performance, security, and best practices.
 Be precise, actionable, and professional.
 
+OBJECTIVE SCORING RUBRIC (0-100 scale):
+- Base Score: Start at 100 points.
+- Penalties:
+  * High / Critical Bug: -15 to -20 points (actual runtime crash, uncaught exception, or fatal logic flaw)
+  * Medium Bug: -8 to -10 points (defect causing incorrect data or failing critical edge cases)
+  * Low Bug: -3 to -5 points (minor unexpected behavior)
+  * High / Critical Security Vulnerability: -15 to -20 points (injection, secret exposure, unauthorized access)
+  * Medium / Low Security Vulnerability: -5 to -10 points
+  * Performance Bottleneck: -5 to -10 points (O(N^2) loops, memory leaks, blocking I/O)
+  * Minor Style / Best Practice Suggestion: -1 to -2 points each
+- Critical Calibration & Anti-Regression Rules:
+  * Strict Definition of a Bug: A "Bug" MUST be an actual runtime error, crash, uncaught promise rejection, data corruption, or fatal logic flaw.
+  * DO NOT classify harmless defensive fallbacks (e.g. Math.min/Math.max clamping), stylistic preferences, comment phrasing differences, or optional typing as Bugs. Place these in "suggestions".
+  * If code has 0 bugs and 0 security issues and clean structure, the score MUST be between 94 and 100.
+  * When reviewing already refactored, modern, or optimized code, celebrate and award its quality (95-100). Do NOT invent artificial flaws or phantom bugs to fill the response. If there are no bugs, return "bugs": [].
+  * Refactored iterations MUST demonstrate clear, monotonically increasing quality (e.g., 65 -> 80 -> 95+), never regressing due to hyper-critical nitpicking.
+
+REFACTORING QUALITY STANDARDS:
+- The "refactoredCode" MUST directly solve all detected bugs, security flaws, and performance bottlenecks.
+- Keep refactoring idiomatic, clean, robust, and readable.
+- Avoid over-engineering with speculative, convoluted wrappers or custom abstraction layers that introduce new edge cases.
+- The refactored code must be production-ready and score 95-100 under review.
+
 IMPORTANT: You MUST respond ONLY with valid JSON. Do not include markdown code block backticks (like \`\`\`json) outside the JSON object.
 Return a single JSON object with the following exact keys:
 {
   "summary": "Brief 2-sentence executive summary of the code quality and major findings",
-  "qualityScore": 85, // integer 0-100 rating overall code quality
+  "qualityScore": 95, // integer 0-100 calculated following the objective rubric above
   "bugs": [
     {
       "line": "Line number or range (e.g. 'Line 4' or 'Global')",
@@ -38,7 +61,7 @@ Return a single JSON object with the following exact keys:
       "recommendation": "Best practice suggestion to improve code maintainability"
     }
   ],
-  "refactoredCode": "Complete, improved and refactored version of the code with modern standards and comments"
+  "refactoredCode": "Production-ready, clean, idiomatic refactored version of the code that directly fixes all issues"
 }`;
 
 /**
@@ -120,7 +143,7 @@ Provide your full code review in the required structured JSON format. Ensure all
             { role: 'user', content: userPrompt }
           ],
           model: model,
-          temperature: 0.2,
+          temperature: 0.1,
           max_tokens: 4000
         });
         if (response && response.choices && response.choices[0]?.message?.content) {
@@ -192,16 +215,69 @@ Provide your full code review in the required structured JSON format. Ensure all
 }
 
 /**
+ * Deterministic Quality Score Calibrator
+ * Anchors the score to objective findings (bugs, security risks, performance flaws)
+ * so that fixing issues monotonically improves the score toward 95-100 without erratic regressions.
+ */
+function calibrateQualityScore(rawScore, findings) {
+  const bugs = Array.isArray(findings.bugs) ? findings.bugs : [];
+  const security = Array.isArray(findings.security) ? findings.security : [];
+  const performance = Array.isArray(findings.performance) ? findings.performance : [];
+  const suggestions = Array.isArray(findings.suggestions) ? findings.suggestions : [];
+
+  let penalty = 0;
+  for (const b of bugs) {
+    const sev = (b.severity || '').toLowerCase();
+    penalty += (sev.includes('high') || sev.includes('crit')) ? 18 : sev.includes('med') ? 10 : 4;
+  }
+  for (const s of security) {
+    const risk = (s.riskLevel || '').toLowerCase();
+    penalty += (risk.includes('high') || risk.includes('crit')) ? 18 : risk.includes('med') ? 10 : 4;
+  }
+  for (const p of performance) {
+    const imp = (p.impact || '').toLowerCase();
+    penalty += (imp.includes('high') || imp.includes('crit')) ? 12 : imp.includes('med') ? 7 : 3;
+  }
+  for (const _ of suggestions) {
+    penalty += 2;
+  }
+
+  const calculatedBase = Math.max(25, Math.min(100, 100 - penalty));
+
+  // If 0 bugs and 0 security risks, reward the clean code with 92-100
+  if (bugs.length === 0 && security.length === 0) {
+    if (typeof rawScore === 'number' && !isNaN(rawScore) && rawScore >= 80) {
+      return Math.max(92, Math.min(100, Math.round((rawScore + calculatedBase) / 2)));
+    }
+    return Math.max(90, calculatedBase);
+  }
+
+  if (typeof rawScore === 'number' && !isNaN(rawScore) && rawScore >= 0 && rawScore <= 100) {
+    // Blend 40% LLM nuance with 60% objective formula to prevent erratic drops
+    return Math.max(25, Math.min(100, Math.round((rawScore * 0.4) + (calculatedBase * 0.6))));
+  }
+
+  return calculatedBase;
+}
+
+/**
  * Sanitize and enforce complete object structure
  */
 function sanitizeAnalysisData(raw, originalCode) {
+  const bugs = Array.isArray(raw.bugs) ? raw.bugs : [];
+  const performance = Array.isArray(raw.performance) ? raw.performance : [];
+  const security = Array.isArray(raw.security) ? raw.security : [];
+  const suggestions = Array.isArray(raw.suggestions) ? raw.suggestions : [];
+
+  const qualityScore = calibrateQualityScore(raw.qualityScore, { bugs, performance, security, suggestions });
+
   return {
     summary: raw.summary || 'Code analysis completed successfully.',
-    qualityScore: typeof raw.qualityScore === 'number' ? raw.qualityScore : 75,
-    bugs: Array.isArray(raw.bugs) ? raw.bugs : [],
-    performance: Array.isArray(raw.performance) ? raw.performance : [],
-    security: Array.isArray(raw.security) ? raw.security : [],
-    suggestions: Array.isArray(raw.suggestions) ? raw.suggestions : [],
+    qualityScore,
+    bugs,
+    performance,
+    security,
+    suggestions,
     refactoredCode: raw.refactoredCode || originalCode
   };
 }
