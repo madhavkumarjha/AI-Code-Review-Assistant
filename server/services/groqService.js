@@ -237,12 +237,12 @@ function calibrateQualityScore(rawScore, findings) {
       b.severity = 'Low';
     }
 
-    penalty += (sev.includes('high') || sev.includes('crit')) ? 18 : sev.includes('med') ? 10 : 4;
+    penalty += (sev.includes('high') || sev.includes('crit')) ? 22 : sev.includes('med') ? 12 : 5;
   }
 
   for (const s of security) {
     const risk = (s.riskLevel || '').toLowerCase();
-    penalty += (risk.includes('high') || risk.includes('crit')) ? 18 : risk.includes('med') ? 10 : 4;
+    penalty += (risk.includes('high') || risk.includes('crit')) ? 25 : risk.includes('med') ? 12 : 5;
   }
   for (const p of performance) {
     const imp = (p.impact || '').toLowerCase();
