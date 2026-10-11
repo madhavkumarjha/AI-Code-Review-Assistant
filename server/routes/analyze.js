@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const upload = require('../middleware/upload');
 const { analyzeCode } = require('../services/groqService');
@@ -68,8 +69,9 @@ router.post('/', upload.single('file'), async (req, res) => {
     // Sanitize input code
     const code = sanitizeCode(rawCode);
 
-    // Cache lookup with TTL check
-    const cacheKey = `${language}:${code}`;
+    // Cache lookup with TTL check (SHA-256 hashed key for privacy)
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+    const cacheKey = `${language}:${codeHash}`;
     if (responseCache.has(cacheKey)) {
       const cached = responseCache.get(cacheKey);
       if (Date.now() - cached.timestamp < CACHE_TTL_MS) {

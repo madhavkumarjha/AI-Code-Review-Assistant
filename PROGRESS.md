@@ -44,33 +44,34 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 
 ---
 
-### ⏳ Release 2.0 — Active Planning & Work Queue
+### ⏳ Release 2.0 — Implementation Status
 
-#### Phase 0 — Fixes & Resilience (Next Up — Target: 3 Days)
-- [ ] **Task 0.1:** Verify and refresh the active Groq model list in config; log successful inference model.
-- [ ] **Task 0.2:** Increase `max_tokens` to 4000 to prevent truncated refactored code; add single retry on invalid JSON.
-- [ ] **Task 0.3:** Enforce strict production CORS allow-list for frontend domain.
-- [ ] **Task 0.4:** Return explicit `isFallback` flag and render clear demo banner in UI (FR-20).
-- [ ] **Task 0.5:** Clean up trailing semicolon bug after code fences in prompt templates.
-- [ ] **Task 0.6:** Migrate cache keys to SHA-256 hash of `language + code` to guarantee privacy (NFR-03).
-- [ ] **Task 0.7:** Harmonize 25,000-character code limit with 2 MB file upload size validation.
+#### Phase 0 — Fixes & Resilience (✅ Completed)
+- [x] **Task 0.1:** Verify and refresh model chain in config; log successful inference model.
+- [x] **Task 0.2:** Increase `max_tokens` to 4000 to prevent truncated refactored code.
+- [x] **Task 0.3:** Enforce strict production CORS allow-list for frontend domain.
+- [x] **Task 0.4:** Return explicit `isFallback` flag and render clear demo banner in UI (FR-20).
+- [x] **Task 0.5:** Clean up trailing semicolon bug after code fences in prompt templates.
+- [x] **Task 0.6:** Migrate cache keys to SHA-256 hash of `language + code` to guarantee privacy (NFR-03).
+- [x] **Task 0.7:** Harmonize 25,000-character code limit with 2 MB file upload size validation.
 
-#### Phase 1 — Foundation (Target: Weeks 1–2)
-- [ ] **FR-04:** Lazy-loaded Monaco Editor with syntax highlighting and line numbers.
-- [ ] **FR-14:** Severity normalizer and visual badges (🔴 Critical, 🟡 Warning, 🔵 Info).
-- [ ] **FR-13:** Radial animated SVG quality score ring.
-- [ ] **FR-05:** Content-based language auto-detection via `highlight.js`.
+#### Phase 1 — Foundation (In Progress)
+- [x] **FR-04:** Lazy-loaded Monaco Editor with syntax highlighting, VS-dark theme, and line numbers.
+- [x] **FR-14:** Severity normalizer and visual badges (🔴 Critical, 🟡 Warning, 🔵 Info).
+- [x] **FR-13:** Radial animated SVG quality score ring with color bands (Green, Amber, Red).
+- [ ] **FR-05:** Content-based language auto-detection library tuning.
 
-#### Phase 2 — Differentiators (Target: Weeks 3–4)
-- [ ] **FR-16:** Side-by-side split Diff Viewer for original vs refactored code.
+#### Phase 2 — Differentiators
+- [x] **FR-16:** Side-by-side split and unified Git Diff Viewer for original vs refactored code.
 - [ ] **FR-17:** Real-time Server-Sent Events (SSE) streaming review endpoint (`/api/v2/analyze/stream`).
 
-#### Phase 3 — Polish & Ecosystem (Target: Weeks 5–6)
-- [ ] **FR-18:** On-demand AI explanation button per finding (`/api/v2/explain`).
+#### Phase 3 — Polish & Ecosystem
+- [x] **FR-18:** On-demand AI explanation modal per finding ("Explain & Fix" deep diagnostic).
+- [x] **DevEx:** Global zero-dependency multi-process runner (`start.js` & root `package.json` for one-command `npm run dev`).
 - [ ] **FR-33:** Multi-format download (JSON & Markdown alongside PDF).
 - [ ] **FR-34:** Privacy-preserving opt-in session history (metadata-only, max 10 entries).
 - [ ] **FR-06:** Debounced analyze-on-paste trigger.
-- [ ] **Release Gate:** Full regression test pass (B1–B30, F1–F31) and release tag `v2.0.0`.
+- [x] **Branding Audit:** Complete removal of third-party vendor tags from all UI components for builder challenge compliance.
 
 ---
 

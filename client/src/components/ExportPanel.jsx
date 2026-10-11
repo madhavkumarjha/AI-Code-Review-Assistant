@@ -70,7 +70,7 @@ ${analysisData.refactoredCode}
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
-    doc.text(`Generated on ${new Date().toLocaleDateString()} | Powered by Groq AI Engine`, margin, 24);
+    doc.text(`Generated on ${new Date().toLocaleDateString()} | AI Code Review Assistant`, margin, 24);
 
     yPos = 42;
 

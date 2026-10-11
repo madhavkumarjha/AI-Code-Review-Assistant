@@ -1,9 +1,9 @@
 # 🚀 AI Code Review Assistant
 
-> **A developer tool powered by Groq's LLM that instantly reviews code, identifies bugs, security flaws, performance bottlenecks, and generates refactored code — all in under 3 seconds.**
+> **An autonomous instant code intelligence platform that reviews code, detects vulnerabilities, identifies performance bottlenecks, and generates production-ready refactors — all in under 3 seconds.**
 
-![AI Code Review Assistant Header](https://img.shields.io/badge/Powered%20By-Groq%20Engine-06B6D4?style=for-the-badge&logo=groq)
-![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20TailwindCSS-3B82F6?style=for-the-badge)
+![Platform Version](https://img.shields.io/badge/Engine-Neural%20Intelligence%20v2-06B6D4?style=for-the-badge)
+![Tech Stack](https://img.shields.io/badge/Stack-React%2018%20%7C%20Node.js%20%7C%20TailwindCSS-3B82F6?style=for-the-badge)
 ![Speed](https://img.shields.io/badge/Latency-%3C3s%20End--to--End-10B981?style=for-the-badge)
 
 ---
@@ -11,11 +11,13 @@
 ## 🌟 Key Features
 
 - 🐛 **4-Dimensional Code Review:** Analyzes code for Bugs & Syntax Errors, Performance Bottlenecks, Security Risks, and Best Practice Suggestions.
-- ⚡ **Sub-3-Second Latency:** Leverages Groq's high-speed inference engine (`groq/compound-mini`) running at 300+ tokens/sec.
+- ⚡ **Sub-3-Second Latency:** Ultra-fast neural inference pipeline running at 300+ tokens/sec.
 - 🛠️ **Instant Code Refactoring:** Generates clean, production-ready refactored code with inline comments and type safety hints.
-- 📁 **File Upload Support:** Upload `.js`, `.py`, `.java`, `.cpp`, `.ts`, `.go` files directly via Multer file stream.
+- 🔍 **Git-Style Diff Viewer:** Inspect before-and-after improvements side-by-side or unified with colorized syntax chunks.
+- 💻 **Monaco Code Editor:** Full IDE experience with syntax highlighting, line numbers, and multi-language support.
+- 📁 **File Upload Support:** Upload `.js`, `.py`, `.java`, `.cpp`, `.ts`, `.go` files directly via stream parser.
 - 🎯 **1-Click Portfolio Demo Presets:** Test pre-built buggy JavaScript, inefficient Python, SQL/XSS risk, and C++ memory leak snippets in one click.
-- 📄 **Executive PDF Export:** Download professional PDF reports with quality scores and breakdown summaries using `jsPDF`.
+- 📄 **Executive PDF Export:** Download professional audit reports with quality scores and breakdown summaries using `jsPDF`.
 - 🌙 **Sleek Dark Mode UI:** Modern glassmorphism developer dashboard UI built with Tailwind CSS & Framer Motion.
 
 ---
@@ -24,14 +26,14 @@
 
 ```mermaid
 graph TD
-    User([Developer / User]) -->|Paste Code or Upload File| UI[React + Tailwind Frontend]
+    User([Developer / User]) -->|Paste Code or Upload File| UI[React 18 + Monaco Editor]
     UI -->|POST /api/analyze| Express[Node.js Express Backend]
-    Express -->|Validate & Stream Payload| Service[Groq LLM Service]
-    Service -->|Structured JSON Prompt| Groq[Groq Cloud API - groq/compound]
-    Groq -->|Structured Response| Service
-    Service -->|Parse & Sanitize| Express
+    Express -->|Validate & Tokenize Payload| Service[AI Intelligence Service]
+    Service -->|Structured JSON Prompt| Engine[High-Speed Neural Engine]
+    Engine -->|Structured Response| Service
+    Service -->|Parse, Sanitize & SHA-256 Cache| Express
     Express -->|Return 4D Analysis JSON| UI
-    UI -->|Render Cards & Diff| Dashboard[Analysis Dashboard & PDF Generator]
+    UI -->|Render Cards, Score Ring & Visual Diff| Dashboard[Analysis Dashboard & PDF Generator]
 ```
 
 ---
@@ -41,22 +43,39 @@ graph TD
 | Layer | Technology | Description |
 |---|---|---|
 | **Frontend** | React 18 + Vite | Modern, fast interactive UI |
+| **Code Editor** | Monaco Editor | VS Code-grade in-browser editor |
+| **Diff Viewer** | diff library | Split & unified Git-style diff inspection |
 | **Styling** | Tailwind CSS + Framer Motion | Sleek dark glassmorphism dashboard & animations |
 | **Icons** | Lucide React | Clean developer-first iconography |
 | **Backend** | Node.js + Express | REST API handling input validation & file uploads |
 | **File Processing** | Multer | In-memory stream parsing for `.js`, `.py`, `.java`, `.cpp` |
-| **LLM Provider** | Groq API (model fallback chain) | Ultra-fast inference engine (300+ tokens/sec) |
+| **AI Inference** | Ultra-Fast LLM API | High-throughput model fallback chain (300+ tokens/sec) |
 | **Report Export** | jsPDF | Client-side PDF executive report compiler |
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Prerequisites
-- Node.js (v18 or higher)
-- Groq API Key ([Get free key here](https://console.groq.com/))
+### ⚡ Quick Start (Global One-Command)
 
-### 2. Backend Setup
+Run both the Express backend and React/Vite frontend concurrently with a single command from the root directory:
+
+```bash
+# 1. Install all dependencies (Server + Client)
+npm run install:all
+
+# 2. Start Fullstack Development Environment
+npm run dev
+```
+
+- **Backend API:** `http://localhost:5000`
+- **Frontend UI:** `http://localhost:3000`
+
+---
+
+### 📦 Manual Setup (Separate Processes)
+
+#### 1. Backend Setup
 ```bash
 cd server
 npm install
@@ -64,15 +83,15 @@ npm install
 Create a `.env` file inside `server/`:
 ```env
 PORT=5000
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=your_api_key_here
 ```
 Start the backend server:
 ```bash
-npm start
+npm run dev
 ```
-*Note: If no API key is set, the server automatically operates in **Smart Fallback Mode** for offline demos.*
+*Note: If no API key is provided, the server automatically operates in **Smart Fallback Mode** for offline demos.*
 
-### 3. Frontend Setup
+#### 2. Frontend Setup
 ```bash
 cd client
 npm install

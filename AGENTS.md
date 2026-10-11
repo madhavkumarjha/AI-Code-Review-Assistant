@@ -17,9 +17,13 @@ docs/     roadmap, architecture, api.md, UI/UX, development, testing, demo scrip
 
 ## Commands
 ```bash
+npm run install:all                         # Install backend & frontend dependencies
+npm run dev                                 # Global start: API (:5000) + UI (:3000)
+npm run build                               # Production client build
+
+# Or separate processes:
 cd server && npm install && npm run dev     # API on :5000
 cd client && npm install && npm run dev     # UI on :3000 (proxies /api)
-cd client && npm run build                  # production build
 ```
 
 ## Rules

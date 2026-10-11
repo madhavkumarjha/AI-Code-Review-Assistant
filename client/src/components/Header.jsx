@@ -16,12 +16,12 @@ export default function Header({ isAnalyzing }) {
               <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 AI Code Review Assistant
               </h1>
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                <Zap className="w-3 h-3 mr-1" /> Groq Engine
+              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm shadow-cyan-500/10">
+                <Zap className="w-3 h-3 mr-1 text-cyan-400" /> Neural Engine
               </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
-              Instant 4-Dimensional Code Review & Refactoring in &lt; 3 Seconds
+              Autonomous 4-Dimensional Code Review &amp; Intelligent Refactoring
             </p>
           </div>
         </div>
@@ -32,14 +32,14 @@ export default function Header({ isAnalyzing }) {
           <div className="flex items-center space-x-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono">
             <span className={`w-2 h-2 rounded-full ${isAnalyzing ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`}></span>
             <span className="text-slate-300">
-              {isAnalyzing ? 'Analyzing...' : 'System Ready'}
+              {isAnalyzing ? 'Analyzing...' : 'Core Ready'}
             </span>
           </div>
 
           {/* Model Info */}
-          <div className="hidden sm:flex items-center space-x-1.5 bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-lg text-xs font-mono">
-            <Cpu className="w-3.5 h-3.5" />
-            <span>groq-compound</span>
+          <div className="hidden sm:flex items-center space-x-1.5 bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 px-3 py-1.5 rounded-lg text-xs font-mono">
+            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+            <span>AI OS v2.0 • &lt;3s</span>
           </div>
         </div>
 

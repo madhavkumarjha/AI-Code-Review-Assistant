@@ -6,7 +6,7 @@ const STAGES = [
   { icon: Cpu, label: 'Tokenizing & Analyzing AST Structure...' },
   { icon: ShieldAlert, label: 'Scanning for Vulnerabilities & Injection Risks...' },
   { icon: Zap, label: 'Evaluating Time & Memory Complexity...' },
-  { icon: CheckCircle2, label: 'Synthesizing Groq LLM Refactored Code...' }
+  { icon: CheckCircle2, label: 'Synthesizing Production-Grade Refactored Code...' }
 ];
 
 export default function LoadingView() {
@@ -36,10 +36,10 @@ export default function LoadingView() {
       </motion.div>
 
       <h3 className="text-xl font-bold text-slate-100 mb-2">
-        Groq AI Analysis in Progress
+        AI Code Intelligence in Progress
       </h3>
       <p className="text-xs text-slate-400 max-w-sm mb-6">
-        Processing code at 300+ tokens/sec using llama-3.1-8b model.
+        Autonomous multi-vector analysis evaluating bugs, security, complexity &amp; refactoring.
       </p>
 
       {/* Progress Steps List */}

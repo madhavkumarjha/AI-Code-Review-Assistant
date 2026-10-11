@@ -1,7 +1,7 @@
 {
   "name": "ai-code-review-server",
   "version": "1.0.0",
-  "description": "Backend API for AI Code Review Assistant powered by Groq",
+  "description": "Backend API for Autonomous Instant Code Intelligence",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

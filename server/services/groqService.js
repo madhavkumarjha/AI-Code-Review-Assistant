@@ -92,28 +92,25 @@ async function analyzeCode(code, language = 'Auto-detect') {
 
 \`\`\`
 ${code}
-\`\`\`;
+\`\`\`
 
 Provide your full code review in the required structured JSON format. Ensure all 5 categories (bugs, performance, security, suggestions, refactoredCode) are thoroughly analyzed.`;
 
   try {
     const startTime = Date.now();
 
-    // Official active Groq API models for chat completions
+    // Production active models for high-speed & high-quality inference
     const modelsToTry = [
-      'groq/compound-mini',
-      'groq/compound',
-      'qwen/qwen3.8-27b',
-      'qwen/qwen3.6-27b',
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
       'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant'
+      'llama-3.1-8b-instant',
+      'llama3-70b-8192',
+      'llama3-8b-8192',
+      'mixtral-8x7b-32768'
     ];
-
 
     let response = null;
     let lastModelError = null;
+    let successfulModel = null;
 
     for (const model of modelsToTry) {
       try {
@@ -124,17 +121,21 @@ Provide your full code review in the required structured JSON format. Ensure all
           ],
           model: model,
           temperature: 0.2,
-          max_tokens: 1500
+          max_tokens: 4000
         });
-        if (response && response.choices && response.choices[0]?.message?.content) break;
+        if (response && response.choices && response.choices[0]?.message?.content) {
+          successfulModel = model;
+          console.log(`⚡ Inference succeeded using model: ${model}`);
+          break;
+        }
       } catch (err) {
-        console.warn(`Groq Model [${model}] failed: ${err.message ? err.message.slice(0, 120) : 'Unknown error'}. Trying next model...`);
+        console.warn(`Model [${model}] failed: ${err.message ? err.message.slice(0, 120) : 'Unknown error'}. Trying next model...`);
         lastModelError = err;
       }
     }
 
     if (!response) {
-      throw lastModelError || new Error('All Groq AI models failed to respond.');
+      throw lastModelError || new Error('All AI models failed to respond.');
     }
 
     const executionTimeMs = Date.now() - startTime;
@@ -182,7 +183,7 @@ Provide your full code review in the required structured JSON format. Ensure all
         executionTimeMs: 450,
         isFallback: true,
         data: generateFallbackAnalysis(code, language).data,
-        warning: 'Groq API model notice. Showing demonstration review.'
+        warning: 'Demonstration Mode: Operating with offline simulated analysis.'
       };
     }
 
