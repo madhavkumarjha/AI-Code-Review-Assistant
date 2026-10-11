@@ -45,7 +45,7 @@ graph TD
 | **Icons** | Lucide React | Clean developer-first iconography |
 | **Backend** | Node.js + Express | REST API handling input validation & file uploads |
 | **File Processing** | Multer | In-memory stream parsing for `.js`, `.py`, `.java`, `.cpp` |
-| **LLM Provider** | Groq API (`groq/compound-mini`) | Ultra-fast inference engine (300+ tokens/sec) |
+| **LLM Provider** | Groq API (model fallback chain) | Ultra-fast inference engine (300+ tokens/sec) |
 | **Report Export** | jsPDF | Client-side PDF executive report compiler |
 
 ---
@@ -79,6 +79,25 @@ npm install
 npm run dev
 ```
 Open `http://localhost:3000` in your browser.
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+| [PRD.md](PRD.md) | Product Blueprint & Direction (Single living document) |
+| [PROGRESS.md](PROGRESS.md) | Live progress & active task checklist |
+| [client/README.md](client/README.md) | Frontend architecture & guide (React 18 + Vite + Tailwind) |
+| [server/README.md](server/README.md) | Backend API & setup guide (Express + Groq) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Release plan & API evolution roadmap |
+| [docs/architecture.md](docs/architecture.md) | System design & data flow |
+| [docs/api.md](docs/api.md) | Unified API contracts (v1 & v2 combined) |
+| [docs/ui-ux.md](docs/ui-ux.md) | UI/UX specifications & design tokens |
+| [docs/testing.md](docs/testing.md) | Test plan, test cases & quality gates |
+| [docs/development.md](docs/development.md) | Fullstack development & contribution guide |
+| [docs/demo-script.md](docs/demo-script.md) | Live demo presentation walkthrough |
+| [CHANGELOG.md](CHANGELOG.md) | Release history (SemVer) |
+| [AGENTS.md](AGENTS.md) | Guidance for AI coding agents |
 
 ---
 
