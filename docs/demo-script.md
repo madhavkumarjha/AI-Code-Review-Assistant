@@ -9,7 +9,7 @@ A short walkthrough for presenting the product (about 2 minutes).
 1. Click the **🐛 Buggy Async JS** preset
 2. Click **Analyze Code**; point out the staged loader
 3. Walk through the score, severity-tagged findings and tabs
-4. Open **Refactored** (and **Diff** once released)
+4. Open the **Diff** tab to show side-by-side syntax comparison, then click **Explain** on any finding for on-demand AI root-cause diagnosis.
 5. Show **Export PDF** and **Copy Markdown**
 
 ## Closing (30 s)

@@ -11,12 +11,18 @@ client/src/
 ├── App.jsx                     # Top-level state (code, language, results, loading, errors)
 ├── main.jsx                    # Application entry point
 ├── index.css                   # Global styles & Tailwind imports
+├── utils/
+│   └── languageDetector.js    # Client-side heuristic syntax & language auto-detection
 └── components/
     ├── Header.jsx              # Sticky header with branding and latency badge
-    ├── CodeInput.jsx           # Code textarea, language selector, file uploader, presets
-    ├── AnalysisDashboard.jsx   # Results view: score pill, tabs, 4D finding cards, refactored code
+    ├── CodeInput.jsx           # Monaco code editor, file uploader, presets
+    ├── LanguageDropdown.jsx    # Glassmorphic animated language selector
+    ├── AnalysisDashboard.jsx   # Results view: radial score, tabs, 4D finding cards, refactored code
+    ├── ScoreRing.jsx           # Animated radial SVG quality meter
+    ├── DiffViewer.jsx          # Side-by-side & unified Git diff inspector
+    ├── ExplainModal.jsx        # On-demand AI diagnostic explanation modal
+    ├── ProgressToast.jsx       # Real-time multi-stage analysis progress indicator
     ├── ExportPanel.jsx         # Export options: Copy Markdown, Copy Refactored, jsPDF Export, Share
-    ├── LoadingView.jsx         # 4-stage animated progress view
     ├── ErrorBoundary.jsx       # Component crash isolation
     └── SamplePresets.js        # 1-click test code samples (JS, Python, SQL/XSS, C++)
 ```

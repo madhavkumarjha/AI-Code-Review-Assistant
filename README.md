@@ -104,6 +104,7 @@ Open `http://localhost:3000` in your browser.
 ## 📚 Documentation
 
 | Document | Description |
+|---|---|
 | [PRD.md](PRD.md) | Product Blueprint & Direction (Single living document) |
 | [PROGRESS.md](PROGRESS.md) | Live progress & active task checklist |
 | [client/README.md](client/README.md) | Frontend architecture & guide (React 18 + Vite + Tailwind) |

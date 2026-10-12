@@ -6,7 +6,7 @@
 |---|---|
 | **Owner** | Madhav |
 | **Status** | Active |
-| **Last updated** | 2026-10-11 |
+| **Last updated** | 2026-10-12 |
 | **Platform** | Desktop web (mobile out of scope; handled separately via Expo) |
 
 ---
@@ -59,9 +59,9 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 | FR-01 | Paste code in an editor area | P0 | 1.0 | ✅ |
 | FR-02 | Upload a code file (`.js .jsx .ts .tsx .py .java .cpp .c .cs .go .html .css .txt`) | P0 | 1.0 | ✅ |
 | FR-03 | One-click sample presets (buggy JS, slow Python, SQL/XSS, C++ leak) | P1 | 1.0 | ✅ |
-| FR-04 | Monaco editor: syntax highlighting, line numbers, auto-indent (lazy-loaded) | P0 | 2.0 | 🔲 |
-| FR-05 | Language auto-detect from content (library-backed, user can override) | P0 | 2.0 | 🔲 (basic heuristic ✅ in 1.0) |
-| FR-06 | Analyze on paste (debounced, off by default) | P2 | 2.0 | 🔲 |
+| FR-04 | Monaco editor: syntax highlighting, line numbers, auto-indent (lazy-loaded) | P0 | 2.5 | ✅ |
+| FR-05 | Language auto-detect from content (heuristics for 12+ languages, user override) | P0 | 2.5 | ✅ |
+| FR-06 | Analyze on paste (debounced, off by default) | P2 | 2.x | 🔲 (Backlog) |
 
 ### 6.2 Analysis and results
 
@@ -69,15 +69,15 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 |---|---|---|---|---|
 | FR-10 | AI review across four dimensions: bugs, performance, security, suggestions | P0 | 1.0 | ✅ |
 | FR-11 | Refactored code output | P0 | 1.0 | ✅ |
-| FR-12 | Quality score 0–100 with executive summary | P0 | 1.0 | ✅ (pill) |
-| FR-13 | Score shown as animated radial ring | P0 | 2.0 | 🔲 |
-| FR-14 | Severity tags 🔴 Critical / 🟡 Warning / 🔵 Info on every finding | P0 | 2.0 | 🔲 |
-| FR-15 | Tabs: All, Bugs, Performance, Security, Refactored | P0 | 1.0 | ✅ |
-| FR-16 | Side-by-side diff of original vs refactored | P0 | 2.0 | 🔲 |
-| FR-17 | Streaming response with graceful handling of dropped/partial streams | P0 | 2.0 | 🔲 |
-| FR-18 | "Explain more" per finding (follow-up AI explanation) | P1 | 2.0 | 🔲 |
+| FR-12 | Quality score 0–100 with executive summary | P0 | 1.0 | ✅ |
+| FR-13 | Score shown as animated radial ring | P0 | 2.5 | ✅ |
+| FR-14 | Severity tags 🔴 Critical / 🟡 Warning / 🔵 Info on every finding | P0 | 2.5 | ✅ |
+| FR-15 | Tabs: All, Bugs, Performance, Security, Diff, Refactored | P0 | 1.0 & 2.5 | ✅ |
+| FR-16 | Side-by-side diff of original vs refactored | P0 | 2.5 | ✅ |
+| FR-17 | Streaming response with graceful handling of dropped/partial streams | P0 | 2.x | 🔲 (Backlog) |
+| FR-18 | "Explain more" per finding (real AI diagnostic explanation modal) | P1 | 2.5 | ✅ |
 | FR-19 | AI disclaimer shown beside results | P0 | 1.0 | ✅ |
-| FR-20 | Demo/fallback reviews are clearly labelled and never exported as real | P0 | 2.0 | 🔲 |
+| FR-20 | Demo/fallback reviews are clearly labelled and never exported as real | P0 | 2.5 | ✅ |
 
 ### 6.3 Export and workflow
 
