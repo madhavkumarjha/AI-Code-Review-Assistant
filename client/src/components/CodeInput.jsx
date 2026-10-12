@@ -53,18 +53,18 @@ export default function CodeInput({
   const monacoLanguage = LANGUAGE_TO_MONACO[language] || 'javascript';
 
   return (
-    <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden">
+    <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
       
       {/* Top Bar Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3 shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mb-3 shrink-0 w-full">
         
         {/* Language Selector */}
-        <div className="flex items-center space-x-2">
-          <Code2 className="w-4 h-4 text-cyan-400" />
+        <div className="flex items-center space-x-2 min-w-0">
+          <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer"
+            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-2.5 sm:px-3 py-1.5 focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer max-w-[170px] sm:max-w-none truncate"
           >
             <option value="Auto-detect">✨ Auto-detect Language</option>
             <option value="JavaScript">JavaScript / Node.js</option>
@@ -78,7 +78,7 @@ export default function CodeInput({
         </div>
 
         {/* Action Buttons: Upload & Clear */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
           <input
             type="file"
             ref={fileInputRef}
@@ -90,7 +90,7 @@ export default function CodeInput({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isAnalyzing}
-            className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm"
+            className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm shrink-0"
             title="Upload code file (.js, .py, .java, .cpp)"
           >
             {isUploading ? (
@@ -105,7 +105,7 @@ export default function CodeInput({
             <button
               onClick={() => setCode('')}
               disabled={isAnalyzing}
-              className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 disabled:opacity-50 text-slate-400 hover:text-rose-400 border border-slate-700 transition-all"
+              className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 disabled:opacity-50 text-slate-400 hover:text-rose-400 border border-slate-700 transition-all shrink-0"
               title="Clear Editor"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -117,11 +117,11 @@ export default function CodeInput({
       </div>
 
       {/* 1-Click Sample Presets */}
-      <div className="mb-3 shrink-0">
+      <div className="mb-3 shrink-0 w-full">
         <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center">
           <Sparkles className="w-3 h-3 mr-1 text-cyan-400" /> 1-Click Presets:
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
           {SAMPLE_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -141,7 +141,10 @@ export default function CodeInput({
       </div>
 
       {/* Editor Container (Monaco with Textarea Fallback) */}
-      <div className="relative flex-1 min-h-0 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col">
+      <div
+        className="relative flex-1 min-h-[260px] lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {useMonaco ? (
           <Suspense
             fallback={
@@ -166,7 +169,17 @@ export default function CodeInput({
                 automaticLayout: true,
                 padding: { top: 12, bottom: 12 },
                 renderLineHighlight: 'all',
-                contextmenu: true
+                contextmenu: true,
+                wordWrap: 'on',
+                wrappingStrategy: 'advanced',
+                overviewRulerLanes: 0,
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  alwaysConsumeMouseWheel: false,
+                  verticalScrollbarSize: 8,
+                  horizontalScrollbarSize: 8
+                }
               }}
             />
           </Suspense>
@@ -175,14 +188,15 @@ export default function CodeInput({
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="// Paste code here or select a sample preset..."
-            className="w-full h-full p-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs resize-none focus:outline-none"
+            className="w-full h-full p-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs resize-none focus:outline-none overflow-x-auto whitespace-pre touch-pan-y"
+            style={{ WebkitOverflowScrolling: 'touch' }}
             spellCheck="false"
           />
         )}
       </div>
 
       {/* Footer Info & Analyze CTA */}
-      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="mt-3 sm:mt-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0 w-full">
         <div className="text-xs text-slate-500 font-mono flex items-center space-x-2">
           <span>{lineCount} lines</span>
           <span>•</span>

@@ -204,19 +204,19 @@ ${analysisData.refactoredCode}
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-800/80 mt-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3.5 sm:pt-4 border-t border-slate-800/80 mt-4 sm:mt-6 w-full">
       
-      <div className="flex items-center space-x-2 text-xs text-slate-400">
+      <div className="flex items-center space-x-2 text-xs text-slate-400 shrink-0">
         <FileText className="w-4 h-4 text-cyan-400" />
         <span>Export Options:</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         
         {/* Copy All */}
         <button
           onClick={handleCopyMarkdown}
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
         >
           {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copiedAll ? 'Report Copied!' : 'Copy Markdown'}</span>
@@ -225,7 +225,7 @@ ${analysisData.refactoredCode}
         {/* Copy Refactored Code */}
         <button
           onClick={handleCopyRefactored}
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
         >
           {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
           <span>{copiedCode ? 'Code Copied!' : 'Copy Refactored Code'}</span>
@@ -234,7 +234,7 @@ ${analysisData.refactoredCode}
         {/* PDF Download */}
         <button
           onClick={handleExportPDF}
-          className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 transition-all"
+          className="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 transition-all shrink-0"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export PDF Report</span>
@@ -243,7 +243,7 @@ ${analysisData.refactoredCode}
         {/* Share */}
         <button
           onClick={handleShare}
-          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
           title="Share Review Link or Summary"
         >
           {shared ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}

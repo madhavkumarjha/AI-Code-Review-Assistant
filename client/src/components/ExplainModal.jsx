@@ -19,22 +19,22 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
   const severity = finding.severity || finding.riskLevel || finding.impact || 'Notice';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6 shadow-2xl space-y-3.5 sm:space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+          <div className="flex items-center space-x-2 min-w-0 pr-2">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-100">Deep Diagnostic &amp; Explanation</h3>
-              <p className="text-[11px] text-slate-400 font-mono">Language: {language} • Scope: {location}</p>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-100 truncate">Deep Diagnostic &amp; Explanation</h3>
+              <p className="text-[11px] text-slate-400 font-mono truncate">Language: {language} • Scope: {location}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -54,7 +54,7 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
         {/* Diagnostic Explanation */}
         <div className="space-y-1.5">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-cyan-400" />
+            <AlertCircle className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
             <span>Root Cause &amp; Technical Analysis</span>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">
@@ -76,7 +76,10 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
               <span>{copied ? 'Copied' : 'Copy Fix'}</span>
             </button>
           </div>
-          <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs font-mono text-emerald-200 whitespace-pre-wrap">
+          <div
+            className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-words overflow-x-auto w-full max-w-full touch-pan-y"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {recommendation}
           </div>
         </div>

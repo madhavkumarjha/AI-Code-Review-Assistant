@@ -100,17 +100,17 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen overflow-hidden flex flex-col bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white">
+      <div className="min-h-screen lg:h-screen overflow-x-hidden lg:overflow-hidden flex flex-col bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white w-full max-w-[100vw]">
         
         {/* Sticky Header (64px) */}
         <Header isAnalyzing={isAnalyzing} />
 
         {/* Main 2-Column Workspace (No page scroll on desktop) */}
-        <main className="flex-1 h-[calc(100vh-64px)] p-4 lg:p-5 max-w-[1600px] w-full mx-auto overflow-y-auto lg:overflow-hidden flex flex-col min-h-0">
+        <main className="flex-1 min-h-0 lg:h-[calc(100vh-64px)] p-3 sm:p-4 lg:p-5 max-w-[1600px] w-full mx-auto overflow-y-auto lg:overflow-hidden overflow-x-hidden flex flex-col">
           
           {/* Error Banner */}
           {errorMessage && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 flex items-center justify-between text-xs font-mono shadow-lg shrink-0">
+            <div className="mb-3 sm:mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 flex items-center justify-between text-xs font-mono shadow-lg shrink-0">
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{errorMessage}</span>
@@ -125,10 +125,10 @@ export default function App() {
           )}
 
           {/* 2-Column Split Workspace (Left 40% | Right 60%) */}
-          <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0 items-stretch">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 flex-1 min-h-0 items-stretch w-full max-w-full">
             
             {/* Left Column: Code Input & Controls (40%) */}
-            <div className="w-full lg:w-[40%] h-full flex flex-col min-h-0 shrink-0">
+            <div className="w-full lg:w-[40%] flex flex-col min-h-[380px] lg:h-full lg:min-h-0 shrink-0">
               <CodeInput
                 code={code}
                 setCode={setCode}
@@ -141,7 +141,7 @@ export default function App() {
             </div>
 
             {/* Right Column: Loading or Analysis Results (60%) */}
-            <div className="w-full lg:w-[60%] h-full flex flex-col min-h-0 shrink-0">
+            <div className="w-full lg:w-[60%] flex flex-col min-h-[420px] lg:h-full lg:min-h-0 shrink-0 mt-2 lg:mt-0">
               {isAnalyzing ? (
                 <LoadingView />
               ) : (

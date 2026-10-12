@@ -208,8 +208,11 @@ const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopi
         <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
       </button>
     </div>
-    <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-200 overflow-auto leading-6 flex-1 shadow-inner">
-      <pre><code>{refactoredCode}</code></pre>
+    <div
+      className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-y"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      <pre className="whitespace-pre overflow-x-auto w-full max-w-full"><code className="break-normal">{refactoredCode}</code></pre>
     </div>
   </motion.div>
 ));
@@ -257,7 +260,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden">
+    <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
       
       {/* Fallback Demo Mode Banner if Offline */}
       {isFallback && (
@@ -270,12 +273,12 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       )}
 
       {/* Top Header & Radial Score Ring */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-800/80 mb-3 shrink-0">
-        <div className="flex-1 min-w-[200px]">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800/80 mb-3 shrink-0">
+        <div className="flex-1 min-w-0 pr-2">
           <div className="flex items-center space-x-2">
-            <h2 className="text-base font-bold text-slate-100">Audit Dashboard</h2>
+            <h2 className="text-base font-bold text-slate-100 truncate">Audit Dashboard</h2>
             {executionTimeMs && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800/60">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 shrink-0">
                 ⚡ {(executionTimeMs / 1000).toFixed(2)}s
               </span>
             )}
@@ -284,11 +287,16 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </div>
 
         {/* Animated Radial Score Ring (v2 Feature) */}
-        <ScoreRing score={qualityScore} size={64} strokeWidth={6} />
+        <div className="shrink-0">
+          <ScoreRing score={qualityScore} size={60} strokeWidth={6} />
+        </div>
       </div>
 
       {/* Tabs Bar (Includes Diff Tab) */}
-      <div className="flex items-center space-x-1 overflow-x-auto pb-2 mb-3 border-b border-slate-800/60 text-xs font-medium shrink-0">
+      <div
+        className="flex items-center space-x-1 overflow-x-auto pb-2 mb-3 border-b border-slate-800/60 text-xs font-medium shrink-0 touch-pan-x"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <button
           onClick={() => setActiveTab('all')}
           className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
@@ -381,7 +389,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
 
         {/* 5. DIFF TAB (V2 Killer Feature) */}
         {activeTab === 'diff' && (
-          <div className="h-[420px]">
+          <div className="h-[380px] sm:h-[420px] w-full max-w-full overflow-hidden">
             <DiffViewer originalCode={rawCode} refactoredCode={refactoredCode} />
           </div>
         )}
