@@ -43,7 +43,7 @@ Delivered the core end-to-end code analysis experience:
 | 0.4 | Explicit fallback disclosure | ✅ Shipped | Return `isFallback` flag; display clear demo banner in UI |
 | 0.5 | Prompt hygiene | ✅ Shipped | Strip trailing semicolons after markdown fences |
 | 0.6 | Secure cache keys | ✅ Shipped | Key cache entries by SHA-256 hash of code + language |
-| 0.7 | Consistent size limits | ✅ Shipped | Align file upload limits and 25k char limit messaging to 100 KB |
+| 0.7 | Consistent size limits | ✅ Shipped | Align file upload limits and 25k char limit messaging to 30 KB |
 | 0.8 | Centralized JSON error middleware | ✅ Shipped | Global Express error handler returning JSON for Multer/upload errors |
 
 ### Phase 1 — Foundation (✅ Shipped)

@@ -21,7 +21,7 @@ This document is the **Single Source of Truth** for all API contracts of the AI 
 | **Rate Limiting** | 50 requests / 15 min / IP | Standard `RateLimit-*` HTTP response headers enabled. |
 | **JSON Payload Limit** | Max 5 MB | Express `express.json({ limit: '5mb' })`. |
 | **Code Length Cap** | Max 25,000 characters | Enforced on both direct string input and file content. |
-| **File Upload Limit** | Max 100 KB per file (~25,000 chars) | In-memory Multer parsing (`.js .jsx .ts .tsx .py .java .cpp .c .cs .go .html .css .json .php .txt`). |
+| **File Upload Limit** | Max 30 KB per file (~25,000 chars) | In-memory Multer parsing (`.js .jsx .ts .tsx .py .java .cpp .c .cs .go .html .css .json .php .txt`). |
 | **CORS Policy** | Production: strict allow-list (`ALLOWED_ORIGIN`, Vercel domains). Development: open. | Configured in `server/server.js`. |
 | **Privacy & Zero Storage** | Code is never stored on disk, logged to console, or retained past request cycle. Cache keys are SHA-256 hashes. | Server architecture constraint. |
 
@@ -210,36 +210,6 @@ data: { "summary": "...", "qualityScore": 88, "findings": [ ... ], "refactoredCo
 
 #### Failure & Disconnection Handling
 The server validates output JSON before emitting completed sections. If a stream drops or produces invalid JSON, the server automatically attempts **one non-streamed retry**. If retry fails, an explicit `event: error` is returned rather than silent fake data.
-
----
-
-### 3. On-Demand Finding Explanation
-Provides follow-up AI explanations for specific review findings.
-
-- **Method:** `POST`
-- **Path:** `/api/v2/explain`
-- **Request Body:**
-```json
-{
-  "language": "Python",
-  "finding": {
-    "category": "bug",
-    "title": "Mutable default argument",
-    "line": "Line 2"
-  },
-  "codeSnippet": "def append_to(element, target=[]):\n    target.append(element)\n    return target"
-}
-```
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "explanation": "In Python, default arguments are evaluated once when the function is defined, causing state to persist across calls.",
-  "example": "def append_to(element, target=None):\n    if target is None:\n        target = []\n    target.append(element)\n    return target",
-  "executionTimeMs": 850
-}
-```
-*Note: `/api/v2/explain` shares the global 50 req / 15 min rate limit.*
 
 ---
 

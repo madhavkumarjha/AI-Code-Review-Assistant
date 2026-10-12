@@ -11,14 +11,17 @@ const fileFilter = (req, file, cb) => {
   if (allowedExtensions.includes(ext) || file.mimetype.startsWith('text/')) {
     cb(null, true);
   } else {
-    cb(new Error(`Unsupported file type: ${ext}. Supported: JS, PY, Java, C++, TS, Go, HTML, CSS, etc.`), false);
+    const err = new Error(`Unsupported file type: ${ext}. Supported: JS, PY, Java, C++, TS, Go, HTML, CSS, etc.`);
+    err.name = 'Unsupported File Type';
+    err.status = 400;
+    cb(err, false);
   }
 };
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 // 100KB max file size (~25,000 characters) aligned with analyze route
+    fileSize: 30 * 1024 // 30KB max file size (~25,000 characters) strictly aligned with analyze route
   },
   fileFilter: fileFilter
 });

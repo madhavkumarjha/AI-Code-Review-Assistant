@@ -34,7 +34,7 @@ graph TD
 |---|---|
 | `server/server.js` | env check, CORS, rate limiter, body parsers (5 MB), `/api/health`, mounts router |
 | `server/routes/analyze.js` | accept JSON or file, resolve language, validate, sanitize control chars, cache, call service |
-| `server/middleware/upload.js` | Multer memory storage, 2 MB, extension / `text/*` allow-list |
+| `server/middleware/upload.js` | Multer memory storage, 30 KB (~25k chars), extension / `text/*` allow-list |
 | `server/services/groqService.js` | prompt, language heuristic, model chain, JSON parse, shape enforcement, fallback review |
 
 **Request lifecycle:** rate limit → Multer (if file) → validate (non-empty, ≤ 25,000 chars) → sanitize → cache lookup → resolve language → Groq call (chain, temperature 0.2, `max_tokens` 1500) → parse (strip ```json fences) → enforce shape → cache (non-fallback only) → respond with `executionTimeMs`.
@@ -107,5 +107,5 @@ graph TD
 | CORS callback accepts every origin | Roadmap 2.0 Phase 0 |
 | Cache keys hold raw code | 2.0 Phase 0 |
 | 400/auth errors masked as a successful fake review | 2.0 Phase 0 |
-| Upload path capped at 25,000 chars despite 2 MB Multer limit | 2.0 Phase 0 |
+| Upload path capped at 25,000 chars despite 2 MB Multer limit | Resolved in 2.5 (harmonized to 30 KB) |
 | Rate limiter is in-memory per instance (resets on restart, not shared) | Backlog |

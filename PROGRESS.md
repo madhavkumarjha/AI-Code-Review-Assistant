@@ -53,7 +53,7 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 - [x] **Task 0.4:** Return explicit `isFallback` flag and render clear demo banner in UI (FR-20).
 - [x] **Task 0.5:** Clean up trailing semicolon bug after code fences in prompt templates.
 - [x] **Task 0.6:** Migrate cache keys to SHA-256 hash of `language + code` to guarantee privacy (NFR-03).
-- [x] **Task 0.7:** Harmonize 25,000-character code limit with 100 KB file upload size validation.
+- [x] **Task 0.7:** Harmonize 25,000-character code limit with 30 KB file upload size validation.
 - [x] **Task 0.8:** Centralized Express JSON error handler for Multer upload & size errors.
 
 #### Phase 1 — Foundation (✅ Shipped)

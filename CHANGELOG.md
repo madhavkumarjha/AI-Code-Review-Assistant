@@ -12,7 +12,7 @@ All notable changes are documented here. Format follows [Keep a Changelog](https
 - **Animated Language Dropdown**: Custom glassmorphic language selector with Framer Motion transitions replacing native select elements.
 - **Expanded Language Support**: Added syntax modes and auto-detection heuristics for C, C#, PHP, React JSX, React TSX, Go, Python, Java, C++, Rust, HTML, CSS, and SQL.
 - **Centralized JSON Error Handling**: Global Express error handler converting Multer upload and validation exceptions into clean JSON error envelopes instead of default HTML crash pages.
-- **Harmonized Size Limits**: Standardized upload and string limits to 100 KB (~25,000 characters) across `upload.js`, `analyze.js`, and `server.js` with clear user messaging.
+- **Harmonized Size Limits**: Standardized upload and string limits to 30 KB (~25,000 characters) across `upload.js`, `analyze.js`, and `server.js` with clear user messaging.
 - **Resilient PDF Report Generator**: Strict jsPDF font metrics (`splitTextToSize`) and WinAnsi ASCII sanitization eliminating letter-spacing artifacts, clipping, and page overflows.
 - **Floating Progress Indicator**: Non-intrusive floating progress toast positioned under header tracking analysis lifecycle stages.
 - **Privacy Hashed Cache**: Cache entries keyed by SHA-256 hash of code and language rather than raw snippets.

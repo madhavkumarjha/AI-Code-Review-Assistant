@@ -12,7 +12,7 @@ server/
 ├── routes/
 │   └── analyze.js          # POST /api/analyze: request validation, sanitization, cache, response formatting
 ├── middleware/
-│   └── upload.js           # Multer in-memory stream parser for uploaded source code files (≤ 2 MB)
+│   └── upload.js           # Multer in-memory stream parser for uploaded source code files (≤ 30 KB / ~25k chars)
 └── services/
     └── groqService.js      # Prompt formatting, Groq model fallback chain, JSON extraction, fallback mock
 ```

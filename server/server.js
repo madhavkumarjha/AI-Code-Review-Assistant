@@ -45,7 +45,10 @@ app.use(cors({
     ) {
       return callback(null, true);
     }
-    return callback(new Error('CORS origin denied by server policy'));
+    const corsErr = new Error('CORS origin denied by server policy');
+    corsErr.status = 403;
+    corsErr.name = 'CORS Forbidden';
+    return callback(corsErr);
   },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -87,7 +90,14 @@ app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       error: 'File Too Large',
-      message: 'Uploaded file exceeds the maximum limit of 100KB (~25,000 characters) for instant analysis.'
+      message: 'Uploaded file exceeds the maximum limit of 30KB (~25,000 characters) for instant analysis.'
+    });
+  }
+
+  if (err.name === 'Unsupported File Type') {
+    return res.status(400).json({
+      error: 'Unsupported File Type',
+      message: err.message
     });
   }
 
@@ -95,6 +105,13 @@ app.use((err, req, res, next) => {
     return res.status(400).json({
       error: 'Upload Error',
       message: err.message || 'File upload failed.'
+    });
+  }
+
+  if (err.status === 403 || err.name === 'CORS Forbidden' || (err.message && err.message.includes('CORS'))) {
+    return res.status(403).json({
+      error: 'CORS Forbidden',
+      message: err.message || 'Access denied by server CORS policy.'
     });
   }
 

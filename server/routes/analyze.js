@@ -63,7 +63,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     if (rawCode.length > 25000) {
       return res.status(400).json({
         error: 'Limit Exceeded',
-        message: 'Code length exceeds maximum limit of 25,000 characters (~100KB) for instant review.'
+        message: 'Code length exceeds maximum limit of 25,000 characters (~25KB) for instant review.'
       });
     }
 
@@ -119,7 +119,8 @@ router.post('/explain', async (req, res) => {
       });
     }
 
-    const findingId = `${finding.line || ''}:${finding.issue || finding.vulnerability || finding.title || ''}:${language}`;
+    const codeHash = crypto.createHash('sha256').update(code || '').digest('hex').slice(0, 16);
+    const findingId = `${codeHash}:${finding.line || ''}:${finding.issue || finding.vulnerability || finding.title || ''}:${language}`;
     const cacheKey = crypto.createHash('sha256').update(findingId).digest('hex');
 
     if (explainCache.has(cacheKey)) {
