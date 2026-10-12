@@ -61,13 +61,37 @@ ${analysisData.refactoredCode}
     const contentWidth = pageWidth - (margin * 2); // 182mm
     const maxY = 268; // Leave margin for footer
 
-    // Text Sanitizer: remove abnormal spacing and normalized characters
+    // Text Sanitizer: remove abnormal spacing and convert unicode to pure ASCII
+    // Prevents jsPDF 16-bit double-byte corruptions (spaced-out characters 'A l g o r i t h m s' and quote ' replacement)
     const cleanStr = (str) => {
       if (!str) return '';
       return String(str)
+        .replace(/\t/g, '  ')
+        .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+        .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB]/g, '')
+        .replace(/[\u2713\u2714\u221A]/g, '')
+        .replace(/[\u2715\u2716\u2717\u2718]/g, '')
+        .replace(/\u2026/g, '...')
+        .replace(/[^\x20-\x7E\r\n]/g, '')
         .replace(/[ \t]+/g, ' ')
-        .replace(/ - /g, ' – ')
         .trim();
+    };
+
+    // Code Line Sanitizer: maintains indentation while cleaning corrupting unicode
+    const sanitizeCodeLine = (str) => {
+      if (!str) return '';
+      return String(str)
+        .replace(/\t/g, '  ')
+        .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+        .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB]/g, '')
+        .replace(/[\u2713\u2714\u221A]/g, '')
+        .replace(/[\u2715\u2716\u2717\u2718]/g, '')
+        .replace(/\u2026/g, '...')
+        .replace(/[^\x20-\x7E\r\n]/g, '');
     };
 
     let yPos = 0;
@@ -103,15 +127,15 @@ ${analysisData.refactoredCode}
       const now = new Date();
       const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
       const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      doc.text(`Generated: ${dateStr} at ${timeStr}  •  Multi-Pass Automated Static & Logic Analysis`, margin, 29);
+      doc.text(`Generated: ${dateStr} at ${timeStr}  |  Multi-Pass Automated Static & Logic Analysis`, margin, 29);
 
       // Top right badge
       doc.setFillColor(30, 41, 59);
-      doc.roundedRect(pageWidth - margin - 38, 10, 38, 6, 1.5, 1.5, 'F');
+      doc.roundedRect(pageWidth - margin - 35, 10, 35, 6, 1.5, 1.5, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7);
       doc.setTextColor(52, 211, 153); // emerald-400
-      doc.text('● VERIFIED AUDIT', pageWidth - margin - 35, 14.2);
+      doc.text('VERIFIED AUDIT', pageWidth - margin - 31, 14.2);
 
       yPos = 42;
     };
@@ -191,7 +215,7 @@ ${analysisData.refactoredCode}
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.5);
     doc.setTextColor(...scoreText);
-    doc.text(`● ${scoreLabel}`, margin + 4, yPos + 21);
+    doc.text(scoreLabel, margin + 4, yPos + 21);
 
     // Card 2: Bugs Count
     const c2X = margin + col1W + 2;
@@ -213,7 +237,7 @@ ${analysisData.refactoredCode}
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text(bugCount === 0 ? '✓ Zero Detected' : 'Issues Found', c2X + 4, yPos + 21);
+    doc.text(bugCount === 0 ? 'Zero Detected' : 'Issues Found', c2X + 4, yPos + 21);
 
     // Card 3: Security Count
     const c3X = c2X + subColW + 2;
@@ -235,7 +259,7 @@ ${analysisData.refactoredCode}
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text(secCount === 0 ? '✓ Scope Secure' : 'Vulnerabilities', c3X + 4, yPos + 21);
+    doc.text(secCount === 0 ? 'Scope Secure' : 'Vulnerabilities', c3X + 4, yPos + 21);
 
     // Card 4: Performance & Suggestions Count
     const c4X = c3X + subColW + 2;
@@ -332,7 +356,7 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(21, 128, 61);
-        doc.text(`✓ ${emptyMessage}`, margin + 4, yPos + 5.2);
+        doc.text(`[PASS] ${cleanStr(emptyMessage)}`, margin + 4, yPos + 5.2);
 
         yPos += 12;
         return;
@@ -382,7 +406,8 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
-        doc.text(line, margin + 21, yPos + 6.5);
+        const lineDisplay = line.length > 40 ? `${line.substring(0, 39)}…` : line;
+        doc.text(lineDisplay, margin + 21, yPos + 6.5);
 
         // Issue description
         doc.setFont('helvetica', 'bold');
@@ -434,7 +459,8 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(15, 23, 42);
-        doc.text(title, margin + 21, yPos + 6.5);
+        const titleDisplay = title.length > 40 ? `${title.substring(0, 39)}…` : title;
+        doc.text(titleDisplay, margin + 21, yPos + 6.5);
 
         // Detail
         doc.setFont('helvetica', 'normal');
@@ -551,85 +577,35 @@ ${analysisData.refactoredCode}
     const refactoredRaw = (analysisData.refactoredCode || rawCode || '// No refactored code available').trim();
     const rawLines = refactoredRaw.split(/\r?\n/);
 
-    // Natural code line wrapping helper so lines wrap gracefully at word boundaries and never overflow or break words
-    const wrapCodeLineNaturally = (line, maxLen = 72) => {
-      // Normalize tabs to 2 spaces for consistent formatting
-      const expandedLine = line.replace(/\t/g, '  ');
-      if (expandedLine.length <= maxLen) {
-        return [expandedLine];
-      }
+    const codeLineHeight = 4.2;
+    const gutterWidth = 12;
+    const codeAreaWidth = contentWidth; // 182mm
+    const codeTextStartX = margin + gutterWidth + 2.5;
+    const maxCodeTextWidth = codeAreaWidth - gutterWidth - 6; // 164mm (strict right boundary constraint)
 
-      const isComment = /^\s*(\/\/|\/\*|\*)/.test(expandedLine);
-      const leadingWsMatch = expandedLine.match(/^(\s*)/);
-      const leadingWs = leadingWsMatch ? leadingWsMatch[1] : '';
+    // Set font once for accurate character metric calculations
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(7.2);
 
-      // Continuation line prefix
-      let continuationPrefix = '';
-      if (/^\s*\/\//.test(expandedLine)) {
-        continuationPrefix = `${leadingWs}//   `;
-      } else if (/^\s*\*/.test(expandedLine)) {
-        continuationPrefix = `${leadingWs}* `;
-      } else {
-        continuationPrefix = `${leadingWs}    `;
-      }
-
-      const result = [];
-      let current = expandedLine;
-
-      while (current.length > maxLen) {
-        const slice = current.substring(0, maxLen);
-        let breakAt = -1;
-
-        if (isComment) {
-          // Break at the last space before maxLen so comment words are never severed
-          breakAt = slice.lastIndexOf(' ');
-        } else {
-          // Find natural code token split points: assignments, colons, logical operators, commas, open brackets, spaces
-          const splitTokens = [' = ', ': ', '|| ', '&& ', ', ', '; ', ' => ', ' {', '( ', ') '];
-          for (const tok of splitTokens) {
-            const idx = slice.lastIndexOf(tok);
-            if (idx > maxLen * 0.25 && idx + tok.length <= maxLen) {
-              if (idx + tok.length > breakAt) {
-                breakAt = idx + tok.length;
-              }
-            }
-          }
-          if (breakAt === -1) {
-            const spaceIdx = slice.lastIndexOf(' ');
-            if (spaceIdx > maxLen * 0.2) {
-              breakAt = spaceIdx + 1;
-            }
-          }
-        }
-
-        // Fallback: if no clean breakpoint found, break at any space before maxLen, or maxLen
-        if (breakAt <= 0) {
-          const anySpace = slice.lastIndexOf(' ');
-          breakAt = anySpace > 0 ? anySpace + 1 : maxLen;
-        }
-
-        const head = current.substring(0, breakAt).trimEnd();
-        result.push(head);
-
-        const tail = current.substring(breakAt).trimStart();
-        if (!tail) break;
-
-        current = (result.length > 0 && isComment)
-          ? (tail.startsWith('//') ? `${leadingWs}${tail}` : `${continuationPrefix}${tail}`)
-          : `${continuationPrefix}${tail}`;
-      }
-
-      if (current.trim().length > 0) {
-        result.push(current);
-      }
-
-      return result.length > 0 ? result : [expandedLine];
-    };
-
-    const maxCharsPerLine = 72;
+    // Pre-calculate line wrapping with exact font-size metric enforcement
     const formattedCodeLines = [];
     rawLines.forEach((ln, idx) => {
-      const wrappedChunks = wrapCodeLineNaturally(ln, maxCharsPerLine);
+      // Normalize tabs to 2 spaces and sanitize non-ASCII characters
+      const expandedLine = sanitizeCodeLine(ln);
+
+      if (!expandedLine.trim()) {
+        formattedCodeLines.push({
+          num: idx + 1,
+          text: '',
+          isContinuation: false
+        });
+        return;
+      }
+
+      // Enforce strict boundary constraints using doc.splitTextToSize
+      // Every line chunk is mathematically guaranteed to fit within maxCodeTextWidth (164mm)
+      const wrappedChunks = doc.splitTextToSize(expandedLine, maxCodeTextWidth);
+
       wrappedChunks.forEach((chunk, cIdx) => {
         formattedCodeLines.push({
           num: cIdx === 0 ? idx + 1 : '',
@@ -638,10 +614,6 @@ ${analysisData.refactoredCode}
         });
       });
     });
-
-    const codeLineHeight = 4.2;
-    const gutterWidth = 11;
-    const codeAreaWidth = contentWidth;
 
     // Helper: draw IDE header bar
     const drawIdeHeader = (isContinuation = false) => {
@@ -701,25 +673,36 @@ ${analysisData.refactoredCode}
         doc.text(numStr, margin + 2.5, yPos + 2.8);
       }
 
-      // Code line background
+      // Code line background (strict width matching codeAreaWidth)
       doc.setFillColor(255, 255, 255);
       doc.rect(margin + gutterWidth, yPos, codeAreaWidth - gutterWidth, codeLineHeight, 'F');
 
-      // Code text
+      // Code text (strict font and size)
       doc.setFont('courier', 'normal');
       doc.setFontSize(7.2);
-      
+
       // Syntax-like color heuristics
       const trimmed = item.text.trim();
-      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('#')) {
         doc.setTextColor(100, 116, 139); // comments in slate-500
-      } else if (trimmed.startsWith('const ') || trimmed.startsWith('let ') || trimmed.startsWith('var ') || trimmed.startsWith('function ') || trimmed.startsWith('return ') || trimmed.startsWith('import ') || trimmed.startsWith('export ')) {
+      } else if (
+        trimmed.startsWith('const ') ||
+        trimmed.startsWith('let ') ||
+        trimmed.startsWith('var ') ||
+        trimmed.startsWith('function ') ||
+        trimmed.startsWith('def ') ||
+        trimmed.startsWith('return ') ||
+        trimmed.startsWith('import ') ||
+        trimmed.startsWith('export ') ||
+        trimmed.startsWith('from ') ||
+        trimmed.startsWith('class ')
+      ) {
         doc.setTextColor(2, 132, 199); // declarations in sky-600
       } else {
         doc.setTextColor(15, 23, 42); // slate-900 standard
       }
 
-      doc.text(item.text, margin + gutterWidth + 2.5, yPos + 2.8);
+      doc.text(item.text, codeTextStartX, yPos + 2.8);
 
       yPos += codeLineHeight;
     });
@@ -746,7 +729,7 @@ ${analysisData.refactoredCode}
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(148, 163, 184);
-      doc.text('AI Code Review Assistant  •  Enterprise Audit Report', margin, 290.5);
+      doc.text('AI Code Review Assistant  |  Enterprise Audit Report', margin, 290.5);
 
       // Center confidentiality
       doc.setFont('helvetica', 'bold');
@@ -806,7 +789,7 @@ ${analysisData.refactoredCode}
         {/* Copy All */}
         <button
           onClick={handleCopyMarkdown}
-          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0 cursor-pointer"
         >
           {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copiedAll ? 'Report Copied!' : 'Copy Markdown'}</span>
@@ -815,7 +798,7 @@ ${analysisData.refactoredCode}
         {/* Copy Refactored Code */}
         <button
           onClick={handleCopyRefactored}
-          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0 cursor-pointer"
         >
           {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
           <span>{copiedCode ? 'Code Copied!' : 'Copy Refactored Code'}</span>
@@ -824,7 +807,7 @@ ${analysisData.refactoredCode}
         {/* PDF Download */}
         <button
           onClick={handleExportPDF}
-          className="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 transition-all shrink-0"
+          className="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 transition-all shrink-0 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export PDF Report</span>
@@ -833,7 +816,7 @@ ${analysisData.refactoredCode}
         {/* Share */}
         <button
           onClick={handleShare}
-          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0"
+          className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all shrink-0 cursor-pointer"
           title="Share Review Link or Summary"
         >
           {shared ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}

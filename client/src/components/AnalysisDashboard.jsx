@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Sparkles,
   GitCompare,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react';
 import ExportPanel from './ExportPanel';
 import ScoreRing from './ScoreRing';
@@ -216,7 +217,7 @@ const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopi
       </div>
       <button
         onClick={handleCopyCode}
-        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[11px] text-emerald-400 border border-emerald-500/30 font-mono transition-all"
+        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[11px] text-emerald-400 border border-emerald-500/30 font-mono transition-all cursor-pointer"
       >
         {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
         <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
@@ -237,7 +238,7 @@ RefactoredSection.propTypes = {
   codeCopied: PropTypes.bool.isRequired
 };
 
-export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCode }) {
+export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCode, onClose }) {
   const [activeTab, setActiveTab] = useState('all');
   const [codeCopied, setCodeCopied] = useState(false);
   const [explainingFinding, setExplainingFinding] = useState(null);
@@ -300,9 +301,18 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
           <p className="text-xs text-slate-400 mt-1.5 leading-relaxed break-words">{summary}</p>
         </div>
 
-        {/* Animated Radial Score Ring (v2 Feature) */}
-        <div className="shrink-0 self-start sm:self-auto">
+        {/* Animated Radial Score Ring & Optional Drawer Close Button */}
+        <div className="shrink-0 flex items-center space-x-2 self-start sm:self-auto">
           <ScoreRing score={qualityScore} size={58} strokeWidth={5} />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer border border-slate-800 hover:border-slate-700 ml-1 shadow-sm"
+              title="Close Results Drawer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -313,7 +323,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       >
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
             activeTab === 'all'
               ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -323,7 +333,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
         <button
           onClick={() => setActiveTab('bugs')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
             activeTab === 'bugs'
               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -334,7 +344,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
         <button
           onClick={() => setActiveTab('performance')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
             activeTab === 'performance'
               ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -345,7 +355,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
         <button
           onClick={() => setActiveTab('security')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
             activeTab === 'security'
               ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -356,7 +366,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
         <button
           onClick={() => setActiveTab('diff')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
             activeTab === 'diff'
               ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -367,7 +377,7 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         </button>
         <button
           onClick={() => setActiveTab('refactored')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer ${
             activeTab === 'refactored'
               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold'
               : 'text-slate-400 hover:text-slate-200'
@@ -453,5 +463,6 @@ AnalysisDashboard.propTypes = {
     isFallback: PropTypes.bool
   }),
   executionTimeMs: PropTypes.number,
-  rawCode: PropTypes.string
+  rawCode: PropTypes.string,
+  onClose: PropTypes.func
 };

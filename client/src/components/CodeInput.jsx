@@ -2,6 +2,8 @@ import React, { useRef, useState, useMemo, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
 import { Play, Upload, Trash2, Code2, Sparkles, Loader2 } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
+import { detectCodeLanguage } from '../utils/languageDetector';
+import LanguageDropdown from './LanguageDropdown';
 
 // Lazy-load Monaco Editor for optimal bundle performance
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
@@ -33,6 +35,34 @@ export default function CodeInput({
   // Line count calculation
   const lineCount = useMemo(() => (code ? code.split('\n').length : 0), [code]);
 
+  // Real-time language detection for code snippets
+  const detectedInfo = useMemo(() => {
+    return detectCodeLanguage(code);
+  }, [code]);
+
+  const monacoLanguage = useMemo(() => {
+    if (language && language !== 'Auto-detect') {
+      return LANGUAGE_TO_MONACO[language] || 'javascript';
+    }
+    return detectedInfo.monacoLang;
+  }, [language, detectedInfo]);
+
+  // Disable intrusive false-positive syntax error squiggles for snippets
+  const handleEditorBeforeMount = (monaco) => {
+    if (monaco?.languages?.typescript) {
+      monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
+        noSuggestionDiagnostics: true
+      });
+      monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: true,
+        noSuggestionDiagnostics: true
+      });
+    }
+  };
+
   const handlePresetSelect = (preset) => {
     setCode(preset.code);
     setLanguage(preset.language);
@@ -50,31 +80,25 @@ export default function CodeInput({
     }
   };
 
-  const monacoLanguage = LANGUAGE_TO_MONACO[language] || 'javascript';
-
   return (
     <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
       
       {/* Top Bar Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mb-3 shrink-0 w-full">
         
-        {/* Language Selector */}
+        {/* Modern Animated Language Selector */}
         <div className="flex items-center space-x-2 min-w-0">
-          <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-2.5 sm:px-3 py-2 min-h-[40px] focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer max-w-[170px] sm:max-w-none truncate hover:border-slate-600 active:bg-slate-800"
-          >
-            <option value="Auto-detect" className="cursor-pointer py-2">✨ Auto-detect Language</option>
-            <option value="JavaScript" className="cursor-pointer py-2">JavaScript / Node.js</option>
-            <option value="TypeScript" className="cursor-pointer py-2">TypeScript</option>
-            <option value="Python" className="cursor-pointer py-2">Python</option>
-            <option value="Java" className="cursor-pointer py-2">Java</option>
-            <option value="C++" className="cursor-pointer py-2">C++ / C</option>
-            <option value="Go" className="cursor-pointer py-2">Go</option>
-            <option value="HTML" className="cursor-pointer py-2">HTML / CSS</option>
-          </select>
+          <LanguageDropdown
+            language={language}
+            setLanguage={setLanguage}
+            detectedName={detectedInfo?.displayName}
+          />
+          {language === 'Auto-detect' && code.trim() && (
+            <span className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 shrink-0 shadow-sm animate-fadeIn">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>Detected: {detectedInfo.displayName}</span>
+            </span>
+          )}
         </div>
 
         {/* Action Buttons: Upload & Clear */}
@@ -127,7 +151,7 @@ export default function CodeInput({
               key={preset.id}
               onClick={() => handlePresetSelect(preset)}
               disabled={isAnalyzing}
-              className="text-left px-2 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 hover:border-cyan-500/50 transition-all group"
+              className="text-left px-2 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 disabled:opacity-50 border border-slate-800 hover:border-cyan-500/50 transition-all group cursor-pointer"
             >
               <div className="text-[11px] font-medium text-slate-200 group-hover:text-cyan-300 truncate">
                 {preset.name}
@@ -159,6 +183,7 @@ export default function CodeInput({
               theme="vs-dark"
               value={code}
               onChange={(val) => setCode(val || '')}
+              beforeMount={handleEditorBeforeMount}
               options={{
                 minimap: { enabled: false },
                 fontSize: 13,
@@ -209,7 +234,7 @@ export default function CodeInput({
           className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center space-x-2 transition-all duration-200 shadow-md ${
             isAnalyzing || isUploading || !code.trim()
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-500/25 active:scale-95'
+              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-500/25 active:scale-95 cursor-pointer'
           }`}
         >
           {isAnalyzing ? (

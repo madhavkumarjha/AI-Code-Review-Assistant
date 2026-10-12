@@ -34,7 +34,7 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -70,7 +70,7 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
             </span>
             <button
               onClick={() => handleCopy(recommendation)}
-              className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center space-x-1 font-mono"
+              className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center space-x-1 font-mono cursor-pointer"
             >
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
               <span>{copied ? 'Copied' : 'Copy Fix'}</span>
@@ -88,7 +88,7 @@ export default function ExplainModal({ finding, language = 'JavaScript', onClose
         <div className="flex justify-end pt-2 border-t border-slate-800">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors"
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors cursor-pointer"
           >
             Close
           </button>

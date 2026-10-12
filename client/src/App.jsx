@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import CodeInput from './components/CodeInput';
-import LoadingView from './components/LoadingView';
 import AnalysisDashboard from './components/AnalysisDashboard';
+import ProgressToast from './components/ProgressToast';
 import ErrorBoundary from './components/ErrorBoundary';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ChevronRight, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [code, setCode] = useState('');
@@ -13,6 +14,7 @@ export default function App() {
   const [analysisData, setAnalysisData] = useState(null);
   const [executionTimeMs, setExecutionTimeMs] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Enforce dark mode class permanently
   useEffect(() => {
@@ -46,8 +48,17 @@ export default function App() {
         throw new Error(resData.message || 'Failed to complete code review analysis.');
       }
 
-      setAnalysisData(resData.data);
+      setAnalysisData({
+        ...resData.data,
+        isFallback: Boolean(resData.isFallback)
+      });
       setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
+      setIsDrawerOpen(true); // Automatically reveal drawer on arrival
+      if (window.innerWidth < 1024) {
+        setTimeout(() => {
+          document.getElementById('results-drawer-container')?.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      }
     } catch (err) {
       console.error('Analysis request error:', err);
       setErrorMessage(err.message || 'An error occurred while connecting to backend service.');
@@ -88,8 +99,17 @@ export default function App() {
         throw new Error(resData.message || 'Failed to analyze uploaded file.');
       }
 
-      setAnalysisData(resData.data);
+      setAnalysisData({
+        ...resData.data,
+        isFallback: Boolean(resData.isFallback)
+      });
       setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
+      setIsDrawerOpen(true);
+      if (window.innerWidth < 1024) {
+        setTimeout(() => {
+          document.getElementById('results-drawer-container')?.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      }
     } catch (err) {
       console.error('File upload error:', err);
       setErrorMessage(err.message || 'Failed to analyze uploaded file.');
@@ -102,11 +122,14 @@ export default function App() {
     <ErrorBoundary>
       <div className="min-h-screen lg:h-screen overflow-x-hidden lg:overflow-hidden flex flex-col bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white w-full max-w-[100vw]">
         
+        {/* Floating Real-Time Progress Toast */}
+        <ProgressToast isVisible={isAnalyzing} />
+
         {/* Sticky Header (64px) */}
         <Header isAnalyzing={isAnalyzing} />
 
-        {/* Main 2-Column Workspace (No page scroll on desktop) */}
-        <main className="flex-1 min-h-0 lg:h-[calc(100vh-64px)] p-3 sm:p-4 lg:p-5 max-w-[1600px] w-full mx-auto overflow-y-auto lg:overflow-hidden overflow-x-hidden flex flex-col">
+        {/* Main Workspace (Strictly overflow-x-hidden) */}
+        <main className="flex-1 min-h-0 lg:h-[calc(100vh-64px)] p-3 sm:p-4 lg:p-5 max-w-[1700px] w-full mx-auto overflow-y-auto lg:overflow-hidden overflow-x-hidden flex flex-col">
           
           {/* Error Banner */}
           {errorMessage && (
@@ -117,18 +140,24 @@ export default function App() {
               </div>
               <button
                 onClick={() => setErrorMessage(null)}
-                className="text-rose-400 hover:text-white font-bold ml-4"
+                className="text-rose-400 hover:text-white font-bold ml-4 cursor-pointer"
               >
                 ✕
               </button>
             </div>
           )}
 
-          {/* 2-Column Split Workspace (Left 40% | Right 60%) */}
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 flex-1 min-h-0 items-stretch w-full max-w-full">
+          {/* Dynamic Adaptive Workspace: Clean Focus Initial State -> Smooth Split Drawer Reveal */}
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 flex-1 min-h-0 items-stretch w-full max-w-full relative overflow-x-hidden">
             
-            {/* Left Column: Code Input & Controls (40%) */}
-            <div className="w-full lg:w-[40%] flex flex-col min-h-[380px] lg:h-full lg:min-h-0 shrink-0">
+            {/* Code Input Container: Expands cleanly in initial state, smoothly resizes when drawer opens */}
+            <div
+              className={`flex flex-col min-h-[380px] lg:h-full lg:min-h-0 transition-all duration-300 ease-in-out ${
+                isDrawerOpen && analysisData
+                  ? 'w-full lg:w-[42%] xl:w-[40%] shrink-0'
+                  : 'w-full max-w-5xl mx-auto flex-1'
+              }`}
+            >
               <CodeInput
                 code={code}
                 setCode={setCode}
@@ -140,20 +169,45 @@ export default function App() {
               />
             </div>
 
-            {/* Right Column: Loading or Analysis Results (60%) */}
-            <div className="w-full lg:w-[60%] flex flex-col min-h-[420px] lg:h-full lg:min-h-0 shrink-0 mt-2 lg:mt-0">
-              {isAnalyzing ? (
-                <LoadingView />
-              ) : (
-                <AnalysisDashboard
-                  analysisData={analysisData}
-                  executionTimeMs={executionTimeMs}
-                  rawCode={code}
-                />
+            {/* Results Drawer Panel: Animated Slide-In from Right */}
+            <AnimatePresence>
+              {isDrawerOpen && analysisData && (
+                <motion.div
+                  id="results-drawer-container"
+                  initial={{ x: '100%', opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: '100%', opacity: 0 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  className="w-full lg:flex-1 flex flex-col min-h-[440px] lg:h-full lg:min-h-0 shrink-0 transition-all duration-300 ease-in-out"
+                >
+                  <AnalysisDashboard
+                    analysisData={analysisData}
+                    executionTimeMs={executionTimeMs}
+                    rawCode={code}
+                    onClose={() => setIsDrawerOpen(false)}
+                  />
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
 
           </div>
+
+          {/* Quick-Reopen Floating Pill (When drawer is minimized but results exist) */}
+          <AnimatePresence>
+            {!isDrawerOpen && analysisData && (
+              <motion.button
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
+                onClick={() => setIsDrawerOpen(true)}
+                className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-semibold shadow-xl shadow-cyan-500/25 flex items-center space-x-2 cursor-pointer transition-all duration-200 active:scale-95 border border-cyan-400/30"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                <span>View Results Drawer ({analysisData.qualityScore}/100)</span>
+                <ChevronRight className="w-4 h-4 ml-0.5" />
+              </motion.button>
+            )}
+          </AnimatePresence>
 
         </main>
 

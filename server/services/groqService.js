@@ -85,30 +85,93 @@ Return a single JSON object with the following exact keys:
  * Quick heuristic language auto-detector for un-specified or 'Auto-detect' snippets
  */
 function detectLanguage(code) {
-  if (!code) return 'JavaScript';
+  if (!code || typeof code !== 'string') return 'JavaScript';
   const trimmed = code.trim();
-  if (trimmed.includes('def ') || trimmed.includes('print(') || (trimmed.includes('import ') && (trimmed.includes('sys') || trimmed.includes('os') || trimmed.includes('pandas') || trimmed.includes('numpy')))) {
-    return 'Python';
-  }
-  if (trimmed.includes('public class ') || trimmed.includes('System.out.println') || trimmed.includes('public static void main')) {
-    return 'Java';
-  }
-  if (trimmed.includes('#include') || trimmed.includes('std::cout') || trimmed.includes('using namespace std;')) {
-    return 'C++';
-  }
-  if (trimmed.includes('package main') || trimmed.includes('func main()') || trimmed.includes('fmt.Println')) {
+  if (!trimmed) return 'JavaScript';
+
+  // 1. Go
+  if (
+    trimmed.includes('package main') ||
+    /\bpackage\s+[a-zA-Z0-9_]+/.test(trimmed) ||
+    /\bfunc\s+([a-zA-Z0-9_]+|\([a-zA-Z0-9_ *]+\)\s*[a-zA-Z0-9_]+)\s*\(/.test(trimmed) ||
+    /\b(fmt\.Print|fmt\.Fprint|fmt\.Sprint|net\/http|sync\/atomic|make\(chan\b)/.test(trimmed) ||
+    /\bchan\s+[a-zA-Z0-9_]+/.test(trimmed)
+  ) {
     return 'Go';
   }
-  if (trimmed.includes('fn main()') || trimmed.includes('let mut ') || trimmed.includes('impl ')) {
-    return 'Rust';
+
+  // 2. Python
+  if (
+    /\bdef\s+[a-zA-Z0-9_]+\s*\(/.test(trimmed) ||
+    /\bclass\s+[a-zA-Z0-9_]+(\([a-zA-Z0-9_.]+\))?:/.test(trimmed) ||
+    /\belif\s+/.test(trimmed) ||
+    /\bprint\s*\(/.test(trimmed) ||
+    /\bimport\s+(os|sys|json|math|random|pandas|numpy|datetime|re|time)\b/.test(trimmed) ||
+    /\bfrom\s+[a-zA-Z0-9_.]+\s+import\b/.test(trimmed) ||
+    trimmed.includes('__init__') ||
+    trimmed.includes('self.')
+  ) {
+    return 'Python';
   }
-  if (trimmed.includes('interface ') || (trimmed.includes(': string') && trimmed.includes('const ')) || trimmed.includes('<React.FC')) {
+
+  // 3. C++ / C
+  if (
+    trimmed.includes('#include <') ||
+    trimmed.includes('#include "') ||
+    trimmed.includes('std::cout') ||
+    trimmed.includes('std::cin') ||
+    trimmed.includes('std::vector') ||
+    trimmed.includes('std::string') ||
+    trimmed.includes('using namespace std;')
+  ) {
+    return 'C++';
+  }
+
+  // 4. Java
+  if (
+    /\bpublic\s+class\s+[a-zA-Z0-9_]+/.test(trimmed) ||
+    trimmed.includes('public static void main') ||
+    trimmed.includes('System.out.println') ||
+    trimmed.includes('System.out.print') ||
+    /\b(private|protected|public)\s+[a-zA-Z0-9_<>[\]]+\s+[a-zA-Z0-9_]+\s*\(/.test(trimmed)
+  ) {
+    return 'Java';
+  }
+
+  // 5. HTML
+  if (
+    trimmed.toLowerCase().startsWith('<!doctype html>') ||
+    trimmed.includes('<html') ||
+    trimmed.includes('<body') ||
+    (trimmed.includes('</div>') && trimmed.includes('<div'))
+  ) {
+    return 'HTML';
+  }
+
+  // 6. TypeScript
+  if (
+    /\binterface\s+[A-Z][a-zA-Z0-9_]*\s*\{/.test(trimmed) ||
+    /\btype\s+[A-Z][a-zA-Z0-9_]*\s*=/.test(trimmed) ||
+    trimmed.includes(': React.FC') ||
+    trimmed.includes(': Promise<') ||
+    /\b(as\s+const|satisfies\b)/.test(trimmed) ||
+    /\b(const|let|var)\s+[a-zA-Z0-9_]+\s*:\s*(string|number|boolean|any|unknown)\b/.test(trimmed)
+  ) {
     return 'TypeScript';
   }
-  if (trimmed.includes('function') || trimmed.includes('const ') || trimmed.includes('let ') || trimmed.includes('console.log') || trimmed.includes('=>')) {
-    return 'JavaScript';
+
+  // 7. Rust
+  if (
+    trimmed.includes('fn main()') ||
+    /\bfn\s+[a-zA-Z0-9_]+\s*\(/.test(trimmed) ||
+    trimmed.includes('let mut ') ||
+    trimmed.includes('impl ') ||
+    trimmed.includes('println!')
+  ) {
+    return 'Rust';
   }
-  return 'General Snippet';
+
+  return 'JavaScript';
 }
 
 /**
@@ -139,11 +202,11 @@ Provide your full code review in the required structured JSON format. Ensure all
   try {
     const startTime = Date.now();
 
-    // Production active models for high-speed & high-quality inference
+    // Active models supported by the current Groq API key
     const modelsToTry = [
       'openai/gpt-oss-120b',
-      'qwen/qwen3.8-27b',
       'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b',
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant'
     ];
@@ -151,6 +214,7 @@ Provide your full code review in the required structured JSON format. Ensure all
     let response = null;
     let lastModelError = null;
     let successfulModel = null;
+    let parsedResult = null;
 
     for (const model of modelsToTry) {
       try {
@@ -161,12 +225,25 @@ Provide your full code review in the required structured JSON format. Ensure all
           ],
           model: model,
           temperature: 0.1,
-          max_tokens: 4000
+          max_tokens: 4000,
+          response_format: { type: 'json_object' }
         });
+
         if (response && response.choices && response.choices[0]?.message?.content) {
-          successfulModel = model;
-          console.log(`⚡ Inference succeeded using model: ${model}`);
-          break;
+          const content = response.choices[0].message.content;
+          try {
+            parsedResult = JSON.parse(content);
+            successfulModel = model;
+            console.log(`⚡ Inference succeeded using model: ${model}`);
+            break;
+          } catch (parseErr) {
+            // Attempt clean markdown block extraction
+            const cleaned = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+            parsedResult = JSON.parse(cleaned);
+            successfulModel = model;
+            console.log(`⚡ Inference succeeded with markdown cleanup using model: ${model}`);
+            break;
+          }
         }
       } catch (err) {
         console.warn(`Model [${model}] failed: ${err.message ? err.message.slice(0, 120) : 'Unknown error'}. Trying next model...`);
@@ -174,21 +251,18 @@ Provide your full code review in the required structured JSON format. Ensure all
       }
     }
 
-    if (!response) {
-      throw lastModelError || new Error('All AI models failed to respond.');
+    if (!parsedResult) {
+      console.warn('All AI models failed to return valid JSON. Falling back to structured fallback generator.');
+      return {
+        success: true,
+        executionTimeMs: Date.now() - startTime,
+        isFallback: true,
+        data: generateFallbackAnalysis(code, resolvedLanguage).data,
+        warning: 'Demonstration Mode: Operating with offline simulated analysis.'
+      };
     }
 
     const executionTimeMs = Date.now() - startTime;
-    const content = response.choices[0]?.message?.content || '{}';
-
-    let parsedResult;
-    try {
-      parsedResult = JSON.parse(content);
-    } catch (e) {
-      // Clean up markdown block if present
-      const cleaned = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
-      parsedResult = JSON.parse(cleaned);
-    }
 
     return {
       success: true,
@@ -209,25 +283,15 @@ Provide your full code review in the required structured JSON format. Ensure all
       throw new Error('Groq API rate limit exceeded. Please wait a moment before trying again.');
     }
     
-    // Fallback gracefully on auth, decommissioned model, or invalid key issues
-    if (
-      errorStatus === 401 || 
-      errorStatus === 400 || 
-      errorMessage.includes('API key') || 
-      errorMessage.includes('decommissioned') || 
-      errorMessage.includes('model')
-    ) {
-      console.warn('Groq API error encountered. Falling back to simulated review generator.');
-      return {
-        success: true,
-        executionTimeMs: 450,
-        isFallback: true,
-        data: generateFallbackAnalysis(code, language).data,
-        warning: 'Demonstration Mode: Operating with offline simulated analysis.'
-      };
-    }
-
-    throw new Error(`AI Review failed: ${errorMessage || 'Unknown API error'}`);
+    // Fallback gracefully on any model/parsing error instead of crashing the UI
+    console.warn('Groq API error encountered. Falling back to resilient analysis generator.');
+    return {
+      success: true,
+      executionTimeMs: 450,
+      isFallback: true,
+      data: generateFallbackAnalysis(code, resolvedLanguage).data,
+      warning: 'Demonstration Mode: Operating with offline simulated analysis.'
+    };
   }
 }
 
