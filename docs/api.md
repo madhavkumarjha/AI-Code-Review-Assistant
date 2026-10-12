@@ -125,7 +125,7 @@ Performs synchronous 4-dimensional analysis and generates refactored code.
 Provides deep AI diagnostic analysis and concrete remediation code for a specific finding.
 
 - **Method:** `POST`
-- **Path:** `/api/analyze/explain` (or `/api/v2/explain`)
+- **Path:** `/api/analyze/explain`
 - **Headers:** `Content-Type: application/json`
 
 #### Request Body (JSON)

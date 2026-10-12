@@ -65,7 +65,7 @@ The API will be available at **`http://localhost:5000`**.
 | `GET` | `/api/health` | Health check and Groq API status | [API Spec](../docs/api.md#1-health-check) |
 | `POST` | `/api/analyze` | Code review endpoint (JSON or file upload) | [API Spec](../docs/api.md#2-full-code-analysis) |
 | `POST` | `/api/v2/analyze/stream` | *(Planned Release 2.0)* SSE Streaming review | [API Spec](../docs/api.md#2-real-time-streaming-review) |
-| `POST` | `/api/v2/explain` | *(Planned Release 2.0)* AI bug explanation | [API Spec](../docs/api.md#3-on-demand-finding-explanation) |
+| `POST` | `/api/analyze/explain` | On-demand AI diagnostic explanation for findings | [API Spec](../docs/api.md#3-on-demand-finding-explanation) |
 
 ---
 

@@ -69,7 +69,7 @@ State is local React hooks; no global store.
 ```mermaid
 graph TD
     UI[React client] -->|SSE POST /api/v2/analyze/stream| API
-    UI -->|POST /api/v2/explain| API
+    UI -->|POST /api/analyze/explain| API
     UI --- ED[Monaco lazy chunk]
     UI --- DF[Diff viewer]
     UI --- HS[(localStorage history: opt-in, metadata only)]

@@ -37,7 +37,7 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | B22 | Stream happy path | `status → meta → section* → done` |
 | B23 | Stream dropped mid-way | One retry; else `error` with `retryable: true`; no fake review |
 | B24 | Invalid JSON from model | Retry, then `INVALID_JSON` |
-| B25 | `/api/v2/explain` valid input | Explanation and example returned |
+| B25 | `/api/analyze/explain` valid input | Deep diagnostic returned (`rootCause`, `remediation`, etc.) |
 | B26 | Explain shares the rate limiter | Counts toward 50 / 15 min |
 | B27 | Disallowed origin in production | Blocked by CORS |
 | B28 | Fallback response | Labelled; never cached |

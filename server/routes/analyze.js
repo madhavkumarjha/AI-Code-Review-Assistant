@@ -133,7 +133,7 @@ router.post('/explain', async (req, res) => {
 
     const result = await explainFinding(finding, code, language);
 
-    if (result && result.success) {
+    if (result && result.success && !result.isFallback) {
       if (explainCache.size >= MAX_CACHE_SIZE) {
         const firstKey = explainCache.keys().next().value;
         explainCache.delete(firstKey);

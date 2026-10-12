@@ -743,6 +743,7 @@ function generateFallbackExplanation(title, recommendation, location, severity, 
 
   return {
     success: true,
+    isFallback: true,
     data: {
       rootCause,
       technicalImpact,
