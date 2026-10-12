@@ -516,19 +516,21 @@ ${analysisData.refactoredCode}
         doc.roundedRect(margin, yPos, contentWidth, cardH, 1.5, 1.5, 'S');
 
         // Area tag
+        const areaWidth = Math.min(30, Math.max(22, area.length * 1.8 + 4));
         doc.setFillColor(241, 245, 249);
-        doc.roundedRect(margin + 3, yPos + 3, 20, 5, 1, 1, 'F');
+        doc.roundedRect(margin + 3, yPos + 3, areaWidth, 5, 1, 1, 'F');
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(6.5);
         doc.setTextColor(71, 85, 105);
-        const areaDisplay = area.length > 12 ? `${area.substring(0, 11)}…` : area;
+        const areaDisplay = area.length > 15 ? `${area.substring(0, 14)}…` : area;
         doc.text(areaDisplay, margin + 4.5, yPos + 6.5);
 
         // Recommendation
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(30, 41, 59);
-        doc.text(recLines, margin + 25, yPos + 6.8);
+        const recLinesFit = doc.splitTextToSize(rec, contentWidth - areaWidth - 10);
+        doc.text(recLinesFit, margin + areaWidth + 5, yPos + 6.8);
 
         yPos += cardH + 2.5;
       }
@@ -549,30 +551,95 @@ ${analysisData.refactoredCode}
     const refactoredRaw = (analysisData.refactoredCode || rawCode || '// No refactored code available').trim();
     const rawLines = refactoredRaw.split(/\r?\n/);
 
-    // Process raw lines with clean wrapping so lines never overflow horizontally
-    const maxCharsPerLine = 78;
+    // Natural code line wrapping helper so lines wrap gracefully at word boundaries and never overflow or break words
+    const wrapCodeLineNaturally = (line, maxLen = 72) => {
+      // Normalize tabs to 2 spaces for consistent formatting
+      const expandedLine = line.replace(/\t/g, '  ');
+      if (expandedLine.length <= maxLen) {
+        return [expandedLine];
+      }
+
+      const isComment = /^\s*(\/\/|\/\*|\*)/.test(expandedLine);
+      const leadingWsMatch = expandedLine.match(/^(\s*)/);
+      const leadingWs = leadingWsMatch ? leadingWsMatch[1] : '';
+
+      // Continuation line prefix
+      let continuationPrefix = '';
+      if (/^\s*\/\//.test(expandedLine)) {
+        continuationPrefix = `${leadingWs}//   `;
+      } else if (/^\s*\*/.test(expandedLine)) {
+        continuationPrefix = `${leadingWs}* `;
+      } else {
+        continuationPrefix = `${leadingWs}    `;
+      }
+
+      const result = [];
+      let current = expandedLine;
+
+      while (current.length > maxLen) {
+        const slice = current.substring(0, maxLen);
+        let breakAt = -1;
+
+        if (isComment) {
+          // Break at the last space before maxLen so comment words are never severed
+          breakAt = slice.lastIndexOf(' ');
+        } else {
+          // Find natural code token split points: assignments, colons, logical operators, commas, open brackets, spaces
+          const splitTokens = [' = ', ': ', '|| ', '&& ', ', ', '; ', ' => ', ' {', '( ', ') '];
+          for (const tok of splitTokens) {
+            const idx = slice.lastIndexOf(tok);
+            if (idx > maxLen * 0.25 && idx + tok.length <= maxLen) {
+              if (idx + tok.length > breakAt) {
+                breakAt = idx + tok.length;
+              }
+            }
+          }
+          if (breakAt === -1) {
+            const spaceIdx = slice.lastIndexOf(' ');
+            if (spaceIdx > maxLen * 0.2) {
+              breakAt = spaceIdx + 1;
+            }
+          }
+        }
+
+        // Fallback: if no clean breakpoint found, break at any space before maxLen, or maxLen
+        if (breakAt <= 0) {
+          const anySpace = slice.lastIndexOf(' ');
+          breakAt = anySpace > 0 ? anySpace + 1 : maxLen;
+        }
+
+        const head = current.substring(0, breakAt).trimEnd();
+        result.push(head);
+
+        const tail = current.substring(breakAt).trimStart();
+        if (!tail) break;
+
+        current = (result.length > 0 && isComment)
+          ? (tail.startsWith('//') ? `${leadingWs}${tail}` : `${continuationPrefix}${tail}`)
+          : `${continuationPrefix}${tail}`;
+      }
+
+      if (current.trim().length > 0) {
+        result.push(current);
+      }
+
+      return result.length > 0 ? result : [expandedLine];
+    };
+
+    const maxCharsPerLine = 72;
     const formattedCodeLines = [];
     rawLines.forEach((ln, idx) => {
-      if (ln.length <= maxCharsPerLine) {
-        formattedCodeLines.push({ num: idx + 1, text: ln, isContinuation: false });
-      } else {
-        // Break long lines gracefully
-        let start = 0;
-        let firstChunk = true;
-        while (start < ln.length) {
-          const chunk = ln.substring(start, start + maxCharsPerLine);
-          formattedCodeLines.push({
-            num: firstChunk ? idx + 1 : '',
-            text: firstChunk ? chunk : `    ${chunk}`,
-            isContinuation: !firstChunk
-          });
-          firstChunk = false;
-          start += maxCharsPerLine;
-        }
-      }
+      const wrappedChunks = wrapCodeLineNaturally(ln, maxCharsPerLine);
+      wrappedChunks.forEach((chunk, cIdx) => {
+        formattedCodeLines.push({
+          num: cIdx === 0 ? idx + 1 : '',
+          text: chunk,
+          isContinuation: cIdx > 0
+        });
+      });
     });
 
-    const codeLineHeight = 3.8;
+    const codeLineHeight = 4.2;
     const gutterWidth = 11;
     const codeAreaWidth = contentWidth;
 

@@ -9,6 +9,8 @@ Monaco editor · severity tags · radial score ring · diff view · streaming (S
 
 ### Planned fixes
 Refreshed Groq model list · larger token budget · enforced CORS allow-list · labelled demo reviews · hashed cache keys.
+- **PDF Code Export**: Fixed crude substring slicing by implementing natural word-boundary wrapping and comment continuation indentation, preventing comments from breaking mid-word or overflowing horizontally.
+- **Review Scope Discipline**: Enforced strict snippet scope boundaries in LLM prompt and sanitized out-of-scope placeholder comments (`// TODO`) and extraneous architecture suggestions.
 
 ## [1.0.0]
 

@@ -77,26 +77,26 @@ export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
             {/* Left: Original Code */}
             <div
               className="border border-slate-800/80 rounded-lg bg-slate-900/40 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-y"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
             >
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 pb-1 border-b border-slate-800">
                 Original Input
               </div>
-              <pre className="text-slate-300 leading-5 whitespace-pre overflow-x-auto w-full max-w-full">
-                <code>{originalCode || '// No original code'}</code>
+              <pre className="text-slate-300 leading-5 whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full">
+                <code className="break-words font-mono">{originalCode || '// No original code'}</code>
               </pre>
             </div>
 
             {/* Right: Refactored Code */}
             <div
               className="border border-emerald-500/20 rounded-lg bg-emerald-950/10 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-y"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
             >
               <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 pb-1 border-b border-emerald-500/20">
                 AI Refactored Result
               </div>
-              <pre className="text-emerald-200 leading-5 whitespace-pre overflow-x-auto w-full max-w-full">
-                <code>{refactoredCode || '// No refactored code'}</code>
+              <pre className="text-emerald-200 leading-5 whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full">
+                <code className="break-words font-mono">{refactoredCode || '// No refactored code'}</code>
               </pre>
             </div>
           </div>

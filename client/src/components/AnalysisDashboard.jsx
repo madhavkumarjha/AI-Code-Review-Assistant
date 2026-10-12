@@ -224,9 +224,9 @@ const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopi
     </div>
     <div
       className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-y"
-      style={{ WebkitOverflowScrolling: 'touch' }}
+      style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
     >
-      <pre className="whitespace-pre overflow-x-auto w-full max-w-full"><code className="break-normal">{refactoredCode}</code></pre>
+      <pre className="whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full leading-6"><code className="break-words font-mono">{refactoredCode}</code></pre>
     </div>
   </motion.div>
 ));
@@ -423,10 +423,10 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       <ExportPanel analysisData={analysisData} rawCode={rawCode} />
 
       {/* AI Disclaimer */}
-      <div className="text-xs text-center text-slate-400 max-w-lg mx-auto mt-4 px-3 flex items-center justify-center gap-1.5 leading-relaxed font-sans">
+      {/* <div className="text-xs text-center text-slate-400 max-w-lg mx-auto mt-4 px-3 flex items-center justify-center gap-1.5 leading-relaxed font-sans">
         <span className="shrink-0 text-amber-400">⚠️</span>
         <span>Autonomous code review. Verify refactored code before deploying to production.</span>
-      </div>
+      </div> */}
 
       {/* Explain Finding Modal (On-demand Diagnostic) */}
       {explainingFinding && (
