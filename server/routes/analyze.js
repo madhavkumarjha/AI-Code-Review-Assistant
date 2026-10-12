@@ -2,10 +2,11 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const upload = require('../middleware/upload');
-const { analyzeCode } = require('../services/groqService');
+const { analyzeCode, explainFinding } = require('../services/groqService');
 
 // In-memory cache with TTL (1 hour) for fast repeated analysis requests
 const responseCache = new Map();
+const explainCache = new Map();
 const MAX_CACHE_SIZE = 100;
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour TTL
 
@@ -62,7 +63,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     if (rawCode.length > 25000) {
       return res.status(400).json({
         error: 'Limit Exceeded',
-        message: 'Code length exceeds max limit of 25,000 characters for instant review.'
+        message: 'Code length exceeds maximum limit of 25,000 characters (~100KB) for instant review.'
       });
     }
 
@@ -102,6 +103,49 @@ router.post('/', upload.single('file'), async (req, res) => {
     return res.status(500).json({
       error: 'Analysis Error',
       message: error.message || 'An error occurred while analyzing the code snippet.'
+    });
+  }
+});
+
+// POST /api/analyze/explain - On-demand AI diagnostic explanation for a specific finding
+router.post('/explain', async (req, res) => {
+  try {
+    const { finding, code = '', language = 'JavaScript' } = req.body || {};
+
+    if (!finding || typeof finding !== 'object') {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'A valid finding object is required for diagnostic explanation.'
+      });
+    }
+
+    const findingId = `${finding.line || ''}:${finding.issue || finding.vulnerability || finding.title || ''}:${language}`;
+    const cacheKey = crypto.createHash('sha256').update(findingId).digest('hex');
+
+    if (explainCache.has(cacheKey)) {
+      const cached = explainCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return res.status(200).json(cached.data);
+      }
+      explainCache.delete(cacheKey);
+    }
+
+    const result = await explainFinding(finding, code, language);
+
+    if (result && result.success) {
+      if (explainCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = explainCache.keys().next().value;
+        explainCache.delete(firstKey);
+      }
+      explainCache.set(cacheKey, { timestamp: Date.now(), data: result });
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('API /api/analyze/explain Error:', error.message || error);
+    return res.status(500).json({
+      error: 'Diagnostic Error',
+      message: error.message || 'Failed to generate diagnostic explanation for this finding.'
     });
   }
 });

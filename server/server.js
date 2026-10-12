@@ -80,6 +80,31 @@ app.get('/api/health', (req, res) => {
 // API Routes with Rate Limiting
 app.use('/api/analyze', apiLimiter, analyzeRouter);
 
+// Centralized JSON Error Handling Middleware (Catches Multer, validation, and request errors)
+app.use((err, req, res, next) => {
+  console.error('Server Request Error:', err.message || err);
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      error: 'File Too Large',
+      message: 'Uploaded file exceeds the maximum limit of 100KB (~25,000 characters) for instant analysis.'
+    });
+  }
+
+  if (err.name === 'MulterError') {
+    return res.status(400).json({
+      error: 'Upload Error',
+      message: err.message || 'File upload failed.'
+    });
+  }
+
+  const statusCode = err.status || err.statusCode || 400;
+  return res.status(statusCode).json({
+    error: err.name || 'Request Error',
+    message: err.message || 'An unexpected error occurred processing your request.'
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 AI Code Review Assistant Backend running on http://localhost:${PORT}`);

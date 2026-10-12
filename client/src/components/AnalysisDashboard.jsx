@@ -238,7 +238,7 @@ RefactoredSection.propTypes = {
   codeCopied: PropTypes.bool.isRequired
 };
 
-export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCode, onClose }) {
+export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCode, language = 'JavaScript', onClose }) {
   const [activeTab, setActiveTab] = useState('all');
   const [codeCopied, setCodeCopied] = useState(false);
   const [explainingFinding, setExplainingFinding] = useState(null);
@@ -442,7 +442,8 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       {explainingFinding && (
         <ExplainModal
           finding={explainingFinding}
-          language="Code"
+          language={language}
+          rawCode={rawCode}
           onClose={() => setExplainingFinding(null)}
         />
       )}
@@ -464,5 +465,6 @@ AnalysisDashboard.propTypes = {
   }),
   executionTimeMs: PropTypes.number,
   rawCode: PropTypes.string,
+  language: PropTypes.string,
   onClose: PropTypes.func
 };

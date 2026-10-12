@@ -627,4 +627,129 @@ def execute_task(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
   };
 }
 
-module.exports = { analyzeCode };
+const EXPLAIN_SYSTEM_PROMPT = `You are a Principal Software Engineer and Security/Reliability Architect.
+Provide an in-depth, rigorous technical diagnostic for a specific code finding.
+Explain why this happens under the hood in the specific programming language, runtime risks, and concrete remediation.
+
+Respond ONLY with valid JSON with this exact schema:
+{
+  "rootCause": "Detailed technical root cause explaining why this issue occurs at compiler/interpreter/runtime level",
+  "technicalImpact": "Potential runtime consequences (e.g., race conditions, memory leaks, security exploit, unhandled crash)",
+  "remediation": "Clean, actionable code snippet or implementation fix to resolve the finding",
+  "bestPractice": "Key architectural pattern or design principle to prevent similar issues"
+}`;
+
+/**
+ * On-demand deep diagnostic explanation for a specific code finding
+ */
+async function explainFinding(finding, code = '', language = 'JavaScript') {
+  const apiKey = process.env.GROQ_API_KEY;
+  const findingTitle = finding?.issue || finding?.vulnerability || finding?.title || 'Code Finding';
+  const findingRec = finding?.recommendation || finding?.fix || finding?.detail || '';
+  const findingLoc = finding?.line || 'Global';
+  const findingSev = finding?.severity || finding?.riskLevel || finding?.impact || 'Warning';
+
+  if (!apiKey || apiKey.trim() === '' || apiKey.trim() === 'your_groq_api_key_here') {
+    return generateFallbackExplanation(findingTitle, findingRec, findingLoc, findingSev, language);
+  }
+
+  const groq = new Groq({ apiKey });
+  const prompt = `Language: ${language}
+Finding: ${findingTitle}
+Severity/Impact: ${findingSev}
+Scope/Location: ${findingLoc}
+Recommended Fix: ${findingRec}
+
+Code context:
+\`\`\`
+${code.slice(0, 3000)}
+\`\`\`
+
+Provide a deep technical diagnosis explaining the root cause, runtime impact, clean remediation code, and best practice.`;
+
+  const modelsToTry = [
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'qwen/qwen3.8-27b',
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant'
+  ];
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: EXPLAIN_SYSTEM_PROMPT },
+          { role: 'user', content: prompt }
+        ],
+        model: model,
+        temperature: 0.15,
+        max_tokens: 1000,
+        response_format: { type: 'json_object' }
+      });
+
+      if (response?.choices?.[0]?.message?.content) {
+        const text = response.choices[0].message.content;
+        try {
+          const parsed = JSON.parse(text);
+          return {
+            success: true,
+            data: {
+              rootCause: parsed.rootCause || `Underlying execution flaw in ${language}: ${findingTitle}`,
+              technicalImpact: parsed.technicalImpact || `May lead to runtime exceptions or degraded reliability under load.`,
+              remediation: parsed.remediation || findingRec || `Apply standard defensive checks in ${language}.`,
+              bestPractice: parsed.bestPractice || `Enforce strict typing and error boundary validations.`
+            }
+          };
+        } catch (parseErr) {
+          const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+          const parsed = JSON.parse(cleaned);
+          return { success: true, data: parsed };
+        }
+      }
+    } catch (err) {
+      console.warn(`Explain with [${model}] failed: ${err.message?.slice(0, 80)}. Trying next...`);
+    }
+  }
+
+  return generateFallbackExplanation(findingTitle, findingRec, findingLoc, findingSev, language);
+}
+
+/**
+ * Heuristic diagnostic explanation generator for offline or fallback mode
+ */
+function generateFallbackExplanation(title, recommendation, location, severity, language) {
+  const isSecurity = title.toLowerCase().includes('sql') || title.toLowerCase().includes('xss') || title.toLowerCase().includes('injection') || title.toLowerCase().includes('sanitize');
+  const isAsync = title.toLowerCase().includes('promise') || title.toLowerCase().includes('async') || title.toLowerCase().includes('fetch');
+  const isMemory = title.toLowerCase().includes('leak') || title.toLowerCase().includes('resource') || title.toLowerCase().includes('pointer');
+
+  let rootCause = `In ${language}, "${title}" occurs when runtime execution paths bypass standard validation boundaries or control flow safeguards.`;
+  let technicalImpact = `Can result in unhandled exceptions, unexpected state corruption, or service degradation under concurrent load.`;
+  let bestPractice = `Implement strict input validation schemas, comprehensive unit test coverage, and static analysis enforcement in CI/CD.`;
+
+  if (isSecurity) {
+    rootCause = `Untrusted input is interpreted as executable commands or query syntax in ${language} without prior sanitization or parameterized binding.`;
+    technicalImpact = `Allows attackers to execute unauthorized commands, access restricted data records, or compromise host runtime integrity.`;
+    bestPractice = `Always use parameterized queries, context-aware escaping, and the principle of least privilege.`;
+  } else if (isAsync) {
+    rootCause = `Asynchronous operations lack guaranteed completion handling (missing try/catch or await rejection traps), creating detached execution flows.`;
+    technicalImpact = `Uncaught promise rejections can crash the Node.js/browser runtime process or cause silent network request dropouts.`;
+    bestPractice = `Encapsulate all asynchronous I/O within structured try/catch blocks and propagate typed errors upstream.`;
+  } else if (isMemory) {
+    rootCause = `Allocated system resources or object references are retained indefinitely without explicit lifecycle deallocation or garbage collection.`;
+    technicalImpact = `Gradual heap growth causing memory exhaustion (OOM), increased GC pause latency, and process restarts.`;
+    bestPractice = `Adhere to RAII (Resource Acquisition Is Initialization) or deterministic disposal patterns with explicit teardown hooks.`;
+  }
+
+  return {
+    success: true,
+    data: {
+      rootCause,
+      technicalImpact,
+      remediation: recommendation || `Refactor the code at ${location} to follow idiomatic ${language} safety patterns.`,
+      bestPractice
+    }
+  };
+}
+
+module.exports = { analyzeCode, explainFinding };

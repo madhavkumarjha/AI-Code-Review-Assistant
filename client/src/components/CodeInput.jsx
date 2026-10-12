@@ -11,12 +11,20 @@ const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 const LANGUAGE_TO_MONACO = {
   'Auto-detect': 'javascript',
   'JavaScript': 'javascript',
+  'React JS': 'javascript',
   'TypeScript': 'typescript',
+  'React TS': 'typescript',
   'Python': 'python',
   'Java': 'java',
   'C++': 'cpp',
+  'C': 'c',
+  'C#': 'csharp',
+  'PHP': 'php',
   'Go': 'go',
-  'HTML': 'html'
+  'Rust': 'rust',
+  'HTML': 'html',
+  'CSS': 'css',
+  'SQL': 'sql'
 };
 
 export default function CodeInput({

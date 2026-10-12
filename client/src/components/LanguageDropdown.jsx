@@ -6,12 +6,20 @@ import { ChevronDown, Check, Sparkles, Code2 } from 'lucide-react';
 const LANGUAGE_OPTIONS = [
   { value: 'Auto-detect', label: 'Auto-detect Language', icon: Sparkles, color: 'text-cyan-400', dot: 'bg-cyan-400' },
   { value: 'JavaScript', label: 'JavaScript / Node.js', dot: 'bg-amber-400' },
+  { value: 'React JS', label: 'React (JSX)', dot: 'bg-cyan-400' },
   { value: 'TypeScript', label: 'TypeScript', dot: 'bg-blue-400' },
+  { value: 'React TS', label: 'React (TSX)', dot: 'bg-blue-500' },
   { value: 'Python', label: 'Python', dot: 'bg-emerald-400' },
   { value: 'Go', label: 'Go', dot: 'bg-cyan-300' },
   { value: 'Java', label: 'Java', dot: 'bg-orange-400' },
-  { value: 'C++', label: 'C++ / C', dot: 'bg-indigo-400' },
-  { value: 'HTML', label: 'HTML / CSS', dot: 'bg-rose-400' }
+  { value: 'C++', label: 'C++', dot: 'bg-indigo-400' },
+  { value: 'C', label: 'C (ISO)', dot: 'bg-indigo-300' },
+  { value: 'C#', label: 'C# (.NET)', dot: 'bg-purple-400' },
+  { value: 'PHP', label: 'PHP', dot: 'bg-violet-400' },
+  { value: 'Rust', label: 'Rust', dot: 'bg-amber-500' },
+  { value: 'HTML', label: 'HTML', dot: 'bg-rose-400' },
+  { value: 'CSS', label: 'CSS', dot: 'bg-pink-400' },
+  { value: 'SQL', label: 'SQL', dot: 'bg-emerald-300' }
 ];
 
 export default function LanguageDropdown({ language, setLanguage, detectedName }) {

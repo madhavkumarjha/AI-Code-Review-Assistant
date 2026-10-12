@@ -21,7 +21,7 @@ This document is the **Single Source of Truth** for all API contracts of the AI 
 | **Rate Limiting** | 50 requests / 15 min / IP | Standard `RateLimit-*` HTTP response headers enabled. |
 | **JSON Payload Limit** | Max 5 MB | Express `express.json({ limit: '5mb' })`. |
 | **Code Length Cap** | Max 25,000 characters | Enforced on both direct string input and file content. |
-| **File Upload Limit** | Max 2 MB per file | In-memory Multer parsing (`.js .jsx .ts .tsx .py .java .cpp .c .cs .go .html .css .json .php .txt`). |
+| **File Upload Limit** | Max 100 KB per file (~25,000 chars) | In-memory Multer parsing (`.js .jsx .ts .tsx .py .java .cpp .c .cs .go .html .css .json .php .txt`). |
 | **CORS Policy** | Production: strict allow-list (`ALLOWED_ORIGIN`, Vercel domains). Development: open. | Configured in `server/server.js`. |
 | **Privacy & Zero Storage** | Code is never stored on disk, logged to console, or retained past request cycle. Cache keys are SHA-256 hashes. | Server architecture constraint. |
 
@@ -116,6 +116,42 @@ Performs synchronous 4-dimensional analysis and generates refactored code.
   },
   "isCached": false,
   "isFallback": false
+}
+```
+
+---
+
+### 3. On-Demand Finding Explanation
+Provides deep AI diagnostic analysis and concrete remediation code for a specific finding.
+
+- **Method:** `POST`
+- **Path:** `/api/analyze/explain` (or `/api/v2/explain`)
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body (JSON)
+```json
+{
+  "finding": {
+    "line": "Line 4",
+    "issue": "Unhandled Promise rejection in async call.",
+    "severity": "High",
+    "recommendation": "Wrap call inside a try-catch block."
+  },
+  "code": "async function getData() { ... }",
+  "language": "JavaScript"
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "success": true,
+  "data": {
+    "rootCause": "Asynchronous operations lack guaranteed completion handling...",
+    "technicalImpact": "Uncaught promise rejections can crash the process...",
+    "remediation": "try {\n  const res = await fetch(...);\n} catch (err) {\n  ...\n}",
+    "bestPractice": "Encapsulate all asynchronous I/O within structured try/catch blocks."
+  }
 }
 ```
 

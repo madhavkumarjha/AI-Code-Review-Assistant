@@ -19,7 +19,6 @@ export default function App() {
   // Enforce dark mode class permanently
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
   }, []);
 
   // Handle Code Analysis Request
@@ -184,6 +183,7 @@ export default function App() {
                     analysisData={analysisData}
                     executionTimeMs={executionTimeMs}
                     rawCode={code}
+                    language={language}
                     onClose={() => setIsDrawerOpen(false)}
                   />
                 </motion.div>

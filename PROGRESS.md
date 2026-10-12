@@ -53,24 +53,27 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 - [x] **Task 0.4:** Return explicit `isFallback` flag and render clear demo banner in UI (FR-20).
 - [x] **Task 0.5:** Clean up trailing semicolon bug after code fences in prompt templates.
 - [x] **Task 0.6:** Migrate cache keys to SHA-256 hash of `language + code` to guarantee privacy (NFR-03).
-- [x] **Task 0.7:** Harmonize 25,000-character code limit with 2 MB file upload size validation.
+- [x] **Task 0.7:** Harmonize 25,000-character code limit with 100 KB file upload size validation.
+- [x] **Task 0.8:** Centralized Express JSON error handler for Multer upload & size errors.
 
-#### Phase 1 — Foundation (In Progress)
+#### Phase 1 — Foundation (✅ Shipped)
 - [x] **FR-04:** Lazy-loaded Monaco Editor with syntax highlighting, VS-dark theme, and line numbers.
 - [x] **FR-14:** Severity normalizer and visual badges (🔴 Critical, 🟡 Warning, 🔵 Info).
 - [x] **FR-13:** Radial animated SVG quality score ring with color bands (Green, Amber, Red).
-- [ ] **FR-05:** Content-based language auto-detection library tuning.
+- [x] **FR-05:** Content-based language auto-detection for 12+ programming languages.
+- [x] **UI Polish:** Animated glassmorphic LanguageDropdown with Framer Motion.
 
 #### Phase 2 — Differentiators
 - [x] **FR-16:** Side-by-side split and unified Git Diff Viewer for original vs refactored code.
-- [ ] **FR-17:** Real-time Server-Sent Events (SSE) streaming review endpoint (`/api/v2/analyze/stream`).
+- [ ] **FR-17:** Real-time Server-Sent Events (SSE) streaming review endpoint (`/api/v2/analyze/stream`) [Backlog].
 
 #### Phase 3 — Polish & Ecosystem
-- [x] **FR-18:** On-demand AI explanation modal per finding ("Explain & Fix" deep diagnostic).
+- [x] **FR-18:** Real on-demand AI diagnostic explanation modal per finding (`/api/analyze/explain`).
 - [x] **DevEx:** Global zero-dependency multi-process runner (`start.js` & root `package.json` for one-command `npm run dev`).
-- [ ] **FR-33:** Multi-format download (JSON & Markdown alongside PDF).
-- [ ] **FR-34:** Privacy-preserving opt-in session history (metadata-only, max 10 entries).
-- [ ] **FR-06:** Debounced analyze-on-paste trigger.
+- [x] **PDF Polish:** Fixed text overflow, letter-spacing artifacts, and boundary constraints in PDF exporter.
+- [ ] **FR-33:** Multi-format download (JSON & Markdown alongside PDF) [Backlog].
+- [ ] **FR-34:** Privacy-preserving opt-in session history (metadata-only, max 10 entries) [Backlog].
+- [ ] **FR-06:** Debounced analyze-on-paste trigger [Backlog].
 - [x] **Branding Audit:** Complete removal of third-party vendor tags from all UI components for builder challenge compliance.
 
 ---

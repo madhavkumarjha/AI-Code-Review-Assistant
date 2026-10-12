@@ -10,8 +10,8 @@ The backend API follows an additive versioning strategy documented in [api.md](a
 
 | Version | Status | Release Milestone | Key Capabilities |
 |---|---|---|---|
-| **API v1** | ✅ Shipped | Release 1.0 | `/api/analyze`, `/api/health`, synchronous JSON response, model fallback chain, IP rate limiting. |
-| **API v2** | 🔲 Planned | Release 2.0 | `/api/v2/analyze/stream` (SSE), `/api/v2/explain`, normalized `findings[]` severity model, one non-stream retry. |
+| **API v1** | ✅ Shipped | Release 1.0 & 2.5 | `/api/analyze`, `/api/analyze/explain`, `/api/health`, synchronous JSON response, model fallback chain, IP rate limiting. |
+| **API v2** | 🔲 Planned | Release 2.x Backlog | `/api/v2/analyze/stream` (SSE), normalized `findings[]` severity model, one non-stream retry. |
 | **API v3** | 💤 Candidate | Release 3.0 | Multi-file payload, chunking for large files (> 25k chars), user-selected model picker. |
 
 ---
@@ -29,55 +29,49 @@ Delivered the core end-to-end code analysis experience:
 
 ---
 
-## 🚀 Release 2.0 — In Planning (≈ 6 Weeks + 3 Days)
+## 🚀 Release 2.5 — Shipped (Professional DX & Visual Inspection)
 
 **Theme:** Professional developer experience, visual clarity, and actionable real-time insight.
 
-### Phase 0 — Fixes & Resilience (≈ 3 days)
+### Phase 0 — Fixes & Resilience (✅ Shipped)
 
-| # | Task | Description |
-|---|---|---|
-| 0.1 | Model catalog verification | Refresh active Groq model list in config; log successful inference model |
-| 0.2 | Token limit adjustment | Increase `max_tokens` (to 4000) to prevent response truncation |
-| 0.3 | Strict CORS enforcement | Restrict origins in production to configured frontend domain |
-| 0.4 | Explicit fallback disclosure | Return `isFallback` flag; display clear demo banner in UI |
-| 0.5 | Prompt hygiene | Strip trailing semicolons after markdown fences |
-| 0.6 | Secure cache keys | Key cache entries by SHA-256 hash of code + language |
-| 0.7 | Consistent size limits | Align file upload limits and 25k char limit messaging |
+| # | Task | Status | Description |
+|---|---|---|---|
+| 0.1 | Model catalog verification | ✅ Shipped | Refresh active Groq model list (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, etc.) |
+| 0.2 | Token limit adjustment | ✅ Shipped | Increase `max_tokens` (to 4000) to prevent response truncation |
+| 0.3 | Strict CORS enforcement | ✅ Shipped | Restrict origins in production to configured frontend domain |
+| 0.4 | Explicit fallback disclosure | ✅ Shipped | Return `isFallback` flag; display clear demo banner in UI |
+| 0.5 | Prompt hygiene | ✅ Shipped | Strip trailing semicolons after markdown fences |
+| 0.6 | Secure cache keys | ✅ Shipped | Key cache entries by SHA-256 hash of code + language |
+| 0.7 | Consistent size limits | ✅ Shipped | Align file upload limits and 25k char limit messaging to 100 KB |
+| 0.8 | Centralized JSON error middleware | ✅ Shipped | Global Express error handler returning JSON for Multer/upload errors |
 
-### Phase 1 — Foundation (Weeks 1–2)
+### Phase 1 — Foundation (✅ Shipped)
 
-| Task | Scope | Requirement |
-|---|---|---|
-| Severity Normalizer | Tag findings with unified 🔴 Critical / 🟡 Warning / 🔵 Info | FR-14 |
-| Animated Score Ring | Radial progress SVG representing 0–100 score | FR-13 |
-| Monaco Editor Integration | Replace basic textarea with syntax-highlighted Monaco editor | FR-04 |
-| Language Auto-Detection | Content-based language detection via `highlight.js` | FR-05 |
+| Task | Scope | Requirement | Status |
+|---|---|---|---|
+| Severity Normalizer | Tag findings with unified 🔴 Critical / 🟡 Warning / 🔵 Info | FR-14 | ✅ Shipped |
+| Animated Score Ring | Radial progress SVG representing 0–100 score | FR-13 | ✅ Shipped |
+| Monaco Editor Integration | Lazy-loaded Monaco editor with dark theme & syntax modes | FR-04 | ✅ Shipped |
+| Language Auto-Detection | Client heuristic auto-detection (12+ languages) | FR-05 | ✅ Shipped |
+| Animated Language Dropdown | Glassmorphic dropdown with Framer Motion transitions | UI | ✅ Shipped |
 
-### Phase 2 — Differentiators (Weeks 3–4)
+### Phase 2 — Differentiators
 
-| Task | Scope | Requirement |
-|---|---|---|
-| Split Diff Viewer | Side-by-side comparison of original vs refactored code | FR-16 |
-| Real-time SSE Streaming | Server-Sent Events endpoint with chunked section delivery | FR-17 |
+| Task | Scope | Requirement | Status |
+|---|---|---|---|
+| Split Diff Viewer | Side-by-side & unified comparison of original vs refactored code | FR-16 | ✅ Shipped |
+| Real-time SSE Streaming | Server-Sent Events endpoint with chunked section delivery | FR-17 | 🔲 Planned (Backlog) |
 
-### Phase 3 — Polish & Ecosystem (Weeks 5–6)
+### Phase 3 — Polish & Ecosystem
 
-| Task | Scope | Requirement |
-|---|---|---|
-| Explain Finding | On-demand AI explanation button per finding (`/api/v2/explain`) | FR-18 |
-| Multi-Format Export | Download raw JSON, Markdown files alongside PDF | FR-33 |
-| Privacy-Preserving History | Local metadata-only session history (opt-in, max 10 entries) | FR-34 |
-| Analyze on Paste | Debounced automatic review trigger | FR-06 |
-| QA & Release Gate | Final end-to-end regression validation and v2.0.0 tag | All |
-
-### Exit Gates
-Phase acceptance criteria and test IDs are defined in [testing.md](testing.md#4-quality-gates).
-
-### Implementation References
-- Unified API Contract: [api.md](api.md)
-- UI/UX Specifications: [ui-ux.md](ui-ux.md)
-- System Architecture: [architecture.md](architecture.md)
+| Task | Scope | Requirement | Status |
+|---|---|---|---|
+| Explain Finding | On-demand AI diagnostic modal per finding (`/api/analyze/explain`) | FR-18 | ✅ Shipped |
+| PDF Export Metrics & Sanitization | Strict font metrics wrapping & WinAnsi ASCII sanitization | FR-33 | ✅ Shipped |
+| Multi-Format Export | Download raw JSON alongside Markdown and PDF | FR-33 | 🔲 Backlog |
+| Privacy-Preserving History | Local metadata-only session history (opt-in, max 10 entries) | FR-34 | 🔲 Backlog |
+| Analyze on Paste | Debounced automatic review trigger | FR-06 | 🔲 Backlog |
 
 ---
 

@@ -2,15 +2,27 @@
 
 All notable changes are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/). Planned work is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## [Unreleased] — targeting 2.0.0
+## [2.5.0]
 
-### Planned
-Monaco editor · severity tags · radial score ring · diff view · streaming (SSE) · explain-bug · Markdown/JSON export · opt-in history · content-based language detection. See [docs/ROADMAP.md](docs/ROADMAP.md).
+### Added
+- **Monaco Code Editor**: Integrated lazy-loaded Monaco Editor (`@monaco-editor/react`) with syntax highlighting, line numbers, automatic wrapping, and non-intrusive lint diagnostics.
+- **Radial Score Ring**: Interactive animated SVG radial quality meter (0–100 scale) with color thresholds (Emerald, Amber, Rose).
+- **Split & Unified Git Diff Viewer**: Full visual diff inspection comparing original submitted code directly against AI-refactored code.
+- **Deep AI Diagnostic Explanation**: On-demand `/api/analyze/explain` endpoint providing root cause analysis, runtime exploit/failure modes, verified remediation code, and prevention best practices.
+- **Animated Language Dropdown**: Custom glassmorphic language selector with Framer Motion transitions replacing native select elements.
+- **Expanded Language Support**: Added syntax modes and auto-detection heuristics for C, C#, PHP, React JSX, React TSX, Go, Python, Java, C++, Rust, HTML, CSS, and SQL.
+- **Centralized JSON Error Handling**: Global Express error handler converting Multer upload and validation exceptions into clean JSON error envelopes instead of default HTML crash pages.
+- **Harmonized Size Limits**: Standardized upload and string limits to 100 KB (~25,000 characters) across `upload.js`, `analyze.js`, and `server.js` with clear user messaging.
+- **Resilient PDF Report Generator**: Strict jsPDF font metrics (`splitTextToSize`) and WinAnsi ASCII sanitization eliminating letter-spacing artifacts, clipping, and page overflows.
+- **Floating Progress Indicator**: Non-intrusive floating progress toast positioned under header tracking analysis lifecycle stages.
+- **Privacy Hashed Cache**: Cache entries keyed by SHA-256 hash of code and language rather than raw snippets.
+- **Refreshed Groq Model Chain**: Updated model failover sequence with active high-performance models (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`).
 
-### Planned fixes
-Refreshed Groq model list · larger token budget · enforced CORS allow-list · labelled demo reviews · hashed cache keys.
-- **PDF Code Export**: Fixed crude substring slicing by implementing natural word-boundary wrapping and comment continuation indentation, preventing comments from breaking mid-word or overflowing horizontally.
-- **Review Scope Discipline**: Enforced strict snippet scope boundaries in LLM prompt and sanitized out-of-scope placeholder comments (`// TODO`) and extraneous architecture suggestions.
+### Deferred to Backlog (Post-2.5)
+- **Real-Time SSE Streaming**: Chunked section-by-section streaming review (`/api/v2/analyze/stream`).
+- **Analyze on Paste**: Automatic debounced review trigger on clipboard paste.
+
+---
 
 ## [1.0.0]
 
@@ -28,11 +40,3 @@ Refreshed Groq model list · larger token budget · enforced CORS allow-list · 
 - IP rate limiting (50 requests / 15 min), in-memory response cache (1 h TTL, 100 entries)
 - Model fallback chain and simulated fallback review mode when Groq is unavailable or unconfigured
 - Deployment config for Vercel (client) and Render (API)
-
-### Known issues (tracked for 2.0)
-- CORS callback accepts every origin
-- Fallback review is not labelled in the UI
-- `max_tokens` of 1500 can truncate long responses
-- Some model IDs in the fallback chain may be invalid
-- Cache keys contain raw submitted code
-- File uploads hit the 25,000-character limit although Multer allows 2 MB
