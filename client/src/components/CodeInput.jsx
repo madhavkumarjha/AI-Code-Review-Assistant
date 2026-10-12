@@ -64,16 +64,16 @@ export default function CodeInput({
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-2.5 sm:px-3 py-1.5 focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer max-w-[170px] sm:max-w-none truncate"
+            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-2.5 sm:px-3 py-2 min-h-[40px] focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer max-w-[170px] sm:max-w-none truncate hover:border-slate-600 active:bg-slate-800"
           >
-            <option value="Auto-detect">✨ Auto-detect Language</option>
-            <option value="JavaScript">JavaScript / Node.js</option>
-            <option value="TypeScript">TypeScript</option>
-            <option value="Python">Python</option>
-            <option value="Java">Java</option>
-            <option value="C++">C++ / C</option>
-            <option value="Go">Go</option>
-            <option value="HTML">HTML / CSS</option>
+            <option value="Auto-detect" className="cursor-pointer py-2">✨ Auto-detect Language</option>
+            <option value="JavaScript" className="cursor-pointer py-2">JavaScript / Node.js</option>
+            <option value="TypeScript" className="cursor-pointer py-2">TypeScript</option>
+            <option value="Python" className="cursor-pointer py-2">Python</option>
+            <option value="Java" className="cursor-pointer py-2">Java</option>
+            <option value="C++" className="cursor-pointer py-2">C++ / C</option>
+            <option value="Go" className="cursor-pointer py-2">Go</option>
+            <option value="HTML" className="cursor-pointer py-2">HTML / CSS</option>
           </select>
         </div>
 
@@ -90,7 +90,7 @@ export default function CodeInput({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isAnalyzing}
-            className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm shrink-0"
+            className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm shrink-0 cursor-pointer"
             title="Upload code file (.js, .py, .java, .cpp)"
           >
             {isUploading ? (
@@ -105,7 +105,7 @@ export default function CodeInput({
             <button
               onClick={() => setCode('')}
               disabled={isAnalyzing}
-              className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 disabled:opacity-50 text-slate-400 hover:text-rose-400 border border-slate-700 transition-all shrink-0"
+              className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg bg-slate-800 hover:bg-rose-950/50 active:scale-95 disabled:opacity-50 text-slate-400 hover:text-rose-400 border border-slate-700 transition-all shrink-0 cursor-pointer"
               title="Clear Editor"
             >
               <Trash2 className="w-3.5 h-3.5" />

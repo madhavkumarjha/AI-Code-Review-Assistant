@@ -41,38 +41,40 @@ const getSeverityMeta = (level) => {
 };
 
 const BugSection = React.memo(({ bugs, onExplain }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
     <div className="flex items-center space-x-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
-      <Bug className="w-4 h-4" />
+      <Bug className="w-4 h-4 shrink-0" />
       <span>Bugs &amp; Runtime Exceptions ({bugs.length})</span>
     </div>
     {bugs.length === 0 ? (
-      <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2">
+      <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400 flex items-center space-x-2">
         <span>✅ No syntax errors or critical bugs detected.</span>
       </div>
     ) : (
       bugs.map((bug, i) => {
         const meta = getSeverityMeta(bug.severity);
         return (
-          <div key={i} className="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 text-xs space-y-2 transition-all hover:border-rose-500/40">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-rose-300 font-mono">{bug.line || 'Code Scope'}</span>
-              <div className="flex items-center space-x-2">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${meta.badge}`}>
+          <div key={i} className="p-4 rounded-xl bg-rose-950/20 border border-rose-500/20 text-xs space-y-2.5 transition-all hover:border-rose-500/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="font-semibold text-rose-300 font-mono text-xs break-words flex-1 min-w-0">
+                {bug.line || 'Code Scope'}
+              </span>
+              <div className="flex items-center space-x-2 shrink-0 self-start sm:self-auto">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${meta.badge}`}>
                   {meta.label}
                 </span>
                 <button
                   onClick={() => onExplain(bug)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1 transition-all"
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1 shrink-0 transition-all cursor-pointer min-h-[28px]"
                 >
                   <Sparkles className="w-3 h-3 text-cyan-400" />
                   <span>Explain</span>
                 </button>
               </div>
             </div>
-            <p className="text-slate-100 font-medium">{bug.issue}</p>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
-              <strong className="text-rose-400">Fix:</strong> {bug.recommendation}
+            <p className="text-slate-100 font-medium break-words leading-relaxed text-xs">{bug.issue}</p>
+            <p className="text-slate-400 text-xs leading-relaxed break-words">
+              <strong className="text-rose-400 font-semibold">Fix:</strong> {bug.recommendation}
             </p>
           </div>
         );
@@ -87,36 +89,38 @@ BugSection.propTypes = {
 };
 
 const PerformanceSection = React.memo(({ performance, onExplain }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
     <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-      <Zap className="w-4 h-4" />
+      <Zap className="w-4 h-4 shrink-0" />
       <span>Performance &amp; Time Complexity ({performance.length})</span>
     </div>
     {performance.length === 0 ? (
-      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+      <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
         ⚡ Logic appears computationally optimal.
       </div>
     ) : (
       performance.map((item, i) => {
         const meta = getSeverityMeta(item.impact);
         return (
-          <div key={i} className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs space-y-1.5 transition-all hover:border-amber-500/40">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-amber-300">{item.title}</span>
-              <div className="flex items-center space-x-2">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${meta.badge}`}>
+          <div key={i} className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs space-y-2.5 transition-all hover:border-amber-500/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="font-semibold text-amber-300 text-xs break-words flex-1 min-w-0">
+                {item.title}
+              </span>
+              <div className="flex items-center space-x-2 shrink-0 self-start sm:self-auto">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${meta.badge}`}>
                   {meta.label}
                 </span>
                 <button
                   onClick={() => onExplain(item)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1"
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1 shrink-0 transition-all cursor-pointer min-h-[28px]"
                 >
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>Deep Dive</span>
                 </button>
               </div>
             </div>
-            <p className="text-slate-300 text-[11px] leading-relaxed">{item.detail}</p>
+            <p className="text-slate-300 text-xs leading-relaxed break-words">{item.detail}</p>
           </div>
         );
       })
@@ -130,37 +134,39 @@ PerformanceSection.propTypes = {
 };
 
 const SecuritySection = React.memo(({ security, onExplain }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
     <div className="flex items-center space-x-2 text-xs font-bold text-purple-400 uppercase tracking-wider">
-      <ShieldAlert className="w-4 h-4" />
+      <ShieldAlert className="w-4 h-4 shrink-0" />
       <span>Security Scanning &amp; Injection Vectors ({security.length})</span>
     </div>
     {security.length === 0 ? (
-      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+      <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
         🔒 No security vulnerabilities identified.
       </div>
     ) : (
       security.map((sec, i) => {
         const meta = getSeverityMeta(sec.riskLevel);
         return (
-          <div key={i} className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs space-y-1.5 transition-all hover:border-purple-500/40">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-purple-300">{sec.vulnerability}</span>
-              <div className="flex items-center space-x-2">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${meta.badge}`}>
+          <div key={i} className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs space-y-2.5 transition-all hover:border-purple-500/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="font-semibold text-purple-300 text-xs break-words flex-1 min-w-0">
+                {sec.vulnerability}
+              </span>
+              <div className="flex items-center space-x-2 shrink-0 self-start sm:self-auto">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${meta.badge}`}>
                   {meta.label}
                 </span>
                 <button
                   onClick={() => onExplain(sec)}
-                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1"
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-[10px] flex items-center space-x-1 shrink-0 transition-all cursor-pointer min-h-[28px]"
                 >
                   <Sparkles className="w-3 h-3 text-purple-400" />
                   <span>Mitigate</span>
                 </button>
               </div>
             </div>
-            <p className="text-slate-300 text-[11px] leading-relaxed">
-              <strong className="text-purple-400">Mitigation:</strong> {sec.fix}
+            <p className="text-slate-300 text-xs leading-relaxed break-words">
+              <strong className="text-purple-400 font-semibold">Mitigation:</strong> {sec.fix}
             </p>
           </div>
         );
@@ -175,15 +181,23 @@ SecuritySection.propTypes = {
 };
 
 const SuggestionsSection = React.memo(({ suggestions }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2">
+  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
     <div className="flex items-center space-x-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-      <Lightbulb className="w-4 h-4" />
+      <Lightbulb className="w-4 h-4 shrink-0" />
       <span>Best Practice Suggestions ({suggestions.length})</span>
     </div>
     {suggestions.map((s, i) => (
-      <div key={i} className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs flex space-x-2 items-start">
-        <span className="font-semibold text-cyan-300 shrink-0 font-mono">[{s.area}]:</span>
-        <span className="text-slate-300 text-[11px] leading-relaxed">{s.recommendation}</span>
+      <div
+        key={i}
+        className="p-4 rounded-xl bg-cyan-950/20 border border-cyan-500/20 text-xs space-y-2 transition-all hover:border-cyan-500/40"
+      >
+        <div className="font-semibold text-cyan-300 font-mono text-xs flex items-center space-x-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0"></span>
+          <span>[{s.area}]</span>
+        </div>
+        <p className="text-slate-300 text-xs leading-relaxed break-words font-sans">
+          {s.recommendation}
+        </p>
       </div>
     ))}
   </motion.div>
@@ -273,22 +287,22 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       )}
 
       {/* Top Header & Radial Score Ring */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-800/80 mb-3 shrink-0">
-        <div className="flex-1 min-w-0 pr-2">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-base font-bold text-slate-100 truncate">Audit Dashboard</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-3.5 border-b border-slate-800/80 mb-3.5 shrink-0">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2.5 flex-wrap gap-y-1">
+            <h2 className="text-base font-bold text-slate-100">Audit Dashboard</h2>
             {executionTimeMs && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 shrink-0">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 shrink-0">
                 ⚡ {(executionTimeMs / 1000).toFixed(2)}s
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-1 line-clamp-2">{summary}</p>
+          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed break-words">{summary}</p>
         </div>
 
         {/* Animated Radial Score Ring (v2 Feature) */}
-        <div className="shrink-0">
-          <ScoreRing score={qualityScore} size={60} strokeWidth={6} />
+        <div className="shrink-0 self-start sm:self-auto">
+          <ScoreRing score={qualityScore} size={58} strokeWidth={5} />
         </div>
       </div>
 
@@ -409,8 +423,9 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       <ExportPanel analysisData={analysisData} rawCode={rawCode} />
 
       {/* AI Disclaimer */}
-      <div className="text-[10px] text-slate-500 text-center mt-3 font-mono">
-        ⚠️ Autonomous code review. Verify refactored code before deploying to production.
+      <div className="text-xs text-center text-slate-400 max-w-lg mx-auto mt-4 px-3 flex items-center justify-center gap-1.5 leading-relaxed font-sans">
+        <span className="shrink-0 text-amber-400">⚠️</span>
+        <span>Autonomous code review. Verify refactored code before deploying to production.</span>
       </div>
 
       {/* Explain Finding Modal (On-demand Diagnostic) */}

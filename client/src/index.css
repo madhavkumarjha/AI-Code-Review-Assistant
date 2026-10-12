@@ -6,6 +6,17 @@
   body {
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+
+  button, select, option, input[type="file"], [role="button"] {
+    cursor: pointer;
+  }
+
+  select option {
+    background-color: #0f172a;
+    color: #f1f5f9;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
 }
 
 /* Custom Scrollbars */
