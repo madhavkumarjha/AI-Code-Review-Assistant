@@ -69,14 +69,14 @@ export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
 
       {/* Diff Content View */}
       <div
-        className="flex-1 overflow-auto p-2 w-full max-w-full touch-pan-y"
+        className="flex-1 overflow-auto p-2 w-full max-w-full touch-pan-x touch-pan-y"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {viewMode === 'split' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-full w-full max-w-full">
             {/* Left: Original Code */}
             <div
-              className="border border-slate-800/80 rounded-lg bg-slate-900/40 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-y"
+              className="border border-slate-800/80 rounded-lg bg-slate-900/40 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-x touch-pan-y"
               style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
             >
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 pb-1 border-b border-slate-800">
@@ -89,7 +89,7 @@ export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
 
             {/* Right: Refactored Code */}
             <div
-              className="border border-emerald-500/20 rounded-lg bg-emerald-950/10 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-y"
+              className="border border-emerald-500/20 rounded-lg bg-emerald-950/10 p-2.5 sm:p-3 overflow-x-auto w-full max-w-full touch-pan-x touch-pan-y"
               style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
             >
               <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 pb-1 border-b border-emerald-500/20">

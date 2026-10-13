@@ -224,7 +224,7 @@ const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopi
       </button>
     </div>
     <div
-      className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-y"
+      className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-x touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
     >
       <pre className="whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full leading-6"><code className="break-words font-mono">{refactoredCode}</code></pre>

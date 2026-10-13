@@ -167,7 +167,7 @@ export default function ExplainModal({ finding, language = 'JavaScript', rawCode
                 </button>
               </div>
               <div
-                className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-words overflow-x-auto w-full max-w-full touch-pan-y"
+                className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs font-mono text-emerald-200 whitespace-pre-wrap break-words overflow-x-auto w-full max-w-full touch-pan-x touch-pan-y"
                 style={{ WebkitOverflowScrolling: 'touch' }}
               >
                 {currentRemediation}

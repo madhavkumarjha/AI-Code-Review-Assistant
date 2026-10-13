@@ -270,7 +270,7 @@ export default function CodeInput({
 
       {/* Editor Container (Monaco IDE with Fast Native Editor Fallback) */}
       <div
-        className="relative flex-none lg:flex-1 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col transition-[height] duration-200 ease-out touch-pan-y lg:h-full lg:min-h-0"
+        className="relative flex-none lg:flex-1 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col transition-[height] duration-200 ease-out touch-pan-x touch-pan-y lg:h-full lg:min-h-0"
         style={{
           height: isMobileView ? `${mobileEditorHeight}px` : undefined,
           minHeight: isMobileView ? '130px' : undefined,
@@ -348,7 +348,7 @@ export default function CodeInput({
               ))}
             </div>
 
-            {/* Native Code Textarea with High-Performance Mobile Responsiveness */}
+            {/* Native Code Textarea with High-Performance Mobile Responsiveness & Fluid Horizontal Pan */}
             <textarea
               ref={textareaRef}
               value={code}
@@ -356,10 +356,11 @@ export default function CodeInput({
               onScroll={handleTextareaScroll}
               onKeyDown={handleTextareaKeyDown}
               placeholder="// Paste code here or select a sample preset above..."
-              className="flex-1 h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-x-auto overflow-y-auto whitespace-pre touch-pan-y"
+              className="min-w-0 flex-1 h-full py-3 px-3.5 pr-6 pb-4 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-x-auto overflow-y-auto whitespace-pre touch-pan-x touch-pan-y"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 tabSize: 2,
+                overscrollBehaviorX: 'contain',
                 overscrollBehaviorY: 'contain'
               }}
               spellCheck={false}
