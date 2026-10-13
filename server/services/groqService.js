@@ -174,6 +174,41 @@ function detectLanguage(code) {
   return 'JavaScript';
 }
 
+// Dynamic working model cache to eliminate trial-and-error latency
+let cachedWorkingModel = null;
+
+function getCandidateModels() {
+  const candidates = [
+    process.env.GROQ_MODEL,
+    cachedWorkingModel,
+    'openai/gpt-oss-120b',
+    'openai/gpt-oss-20b',
+    'qwen/qwen3.8-27b'
+  ].filter(Boolean);
+
+  return [...new Set(candidates)];
+}
+
+/**
+ * Determine whether an error is retryable across different candidate models.
+ * Non-retryable across models:
+ *   - 401: Invalid/Expired API key (Authentication)
+ *   - 403: Permission denied
+ *   - 429: Account-level quota / rate limit exceeded
+ *   - 400: Malformed prompt or invalid request parameters
+ * Retryable across models:
+ *   - 404: Model deprecated, decommissioned, or not found on this account
+ *   - 500/502/503/504: Temporary model capacity/server outages
+ */
+function isRetryableModelError(err) {
+  if (!err) return true;
+  const status = err.status || err.statusCode;
+  if (status === 401 || status === 403 || status === 429 || status === 400) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Perform code analysis using Groq API or smart fallback generator
  */
@@ -202,12 +237,7 @@ Provide your full code review in the required structured JSON format. Ensure all
   try {
     const startTime = Date.now();
 
-    // Verified active Groq model IDs (configurable via GROQ_MODEL env)
-    const modelsToTry = [
-      process.env.GROQ_MODEL,
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant'
-    ].filter(Boolean);
+    const modelsToTry = getCandidateModels();
 
     let response = null;
     let lastModelError = null;
@@ -232,20 +262,32 @@ Provide your full code review in the required structured JSON format. Ensure all
           try {
             parsedResult = JSON.parse(content);
             successfulModel = model;
+            cachedWorkingModel = model;
             console.log(`⚡ Inference succeeded using model: ${model}`);
             break;
           } catch (parseErr) {
             // Attempt clean markdown block extraction
-            const cleaned = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
-            parsedResult = JSON.parse(cleaned);
-            successfulModel = model;
-            console.log(`⚡ Inference succeeded with markdown cleanup using model: ${model}`);
-            break;
+            try {
+              const cleaned = content.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+              parsedResult = JSON.parse(cleaned);
+              successfulModel = model;
+              cachedWorkingModel = model;
+              console.log(`⚡ Inference succeeded with markdown cleanup using model: ${model}`);
+              break;
+            } catch (secondErr) {
+              console.warn(`Model [${model}] returned unparseable JSON content.`);
+            }
           }
         }
       } catch (err) {
-        console.warn(`Model [${model}] failed: ${err.message ? err.message.slice(0, 120) : 'Unknown error'}. Trying next model...`);
+        const status = err.status || err.statusCode;
+        console.warn(`Model [${model}] failed (${status || 'error'}): ${err.message ? err.message.slice(0, 120) : 'Unknown error'}`);
         lastModelError = err;
+
+        // Non-retryable errors (auth, quota, bad request): abort candidate cycle immediately
+        if (!isRetryableModelError(err)) {
+          throw err;
+        }
       }
     }
 
@@ -278,10 +320,24 @@ Provide your full code review in the required structured JSON format. Ensure all
     });
     
     if (errorStatus === 429) {
-      throw new Error('Groq API rate limit exceeded. Please wait a moment before trying again.');
+      const err = new Error('Groq API rate limit exceeded. Please wait a moment before trying again.');
+      err.status = 429;
+      throw err;
+    }
+
+    if (errorStatus === 401 || errorStatus === 403) {
+      const err = new Error('Groq API authentication failed. Please check your GROQ_API_KEY.');
+      err.status = errorStatus;
+      throw err;
+    }
+
+    if (errorStatus === 400) {
+      const err = new Error(errorMessage || 'Invalid request payload sent to Groq API.');
+      err.status = 400;
+      throw err;
     }
     
-    // Fallback gracefully on any model/parsing error instead of crashing the UI
+    // Fallback gracefully on unhandled internal model/parsing errors
     console.warn('Groq API error encountered. Falling back to resilient analysis generator.');
     return {
       success: true,
@@ -682,12 +738,7 @@ ${code.slice(0, 3000)}
 
 Provide a deep technical diagnosis explaining the root cause, runtime impact, clean remediation code, and best practice.`;
 
-  // Verified active Groq model IDs
-  const modelsToTry = [
-    process.env.GROQ_MODEL,
-    'llama-3.3-70b-versatile',
-    'llama-3.1-8b-instant'
-  ].filter(Boolean);
+  const modelsToTry = getCandidateModels();
 
   for (const model of modelsToTry) {
     try {
@@ -706,6 +757,7 @@ Provide a deep technical diagnosis explaining the root cause, runtime impact, cl
         const text = response.choices[0].message.content;
         try {
           const parsed = JSON.parse(text);
+          cachedWorkingModel = model;
           return {
             success: true,
             data: {
@@ -716,13 +768,22 @@ Provide a deep technical diagnosis explaining the root cause, runtime impact, cl
             }
           };
         } catch (parseErr) {
-          const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
-          const parsed = JSON.parse(cleaned);
-          return { success: true, data: parsed };
+          try {
+            const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+            const parsed = JSON.parse(cleaned);
+            cachedWorkingModel = model;
+            return { success: true, data: parsed };
+          } catch (secondErr) {
+            console.warn(`Model [${model}] returned unparseable JSON for explain.`);
+          }
         }
       }
     } catch (err) {
-      console.warn(`Explain with [${model}] failed: ${err.message?.slice(0, 80)}. Trying next...`);
+      const status = err.status || err.statusCode;
+      console.warn(`Explain with [${model}] failed (${status || 'error'}): ${err.message?.slice(0, 80)}. Trying next...`);
+      if (!isRetryableModelError(err)) {
+        throw err;
+      }
     }
   }
 

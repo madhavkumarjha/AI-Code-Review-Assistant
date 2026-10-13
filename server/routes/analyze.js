@@ -124,9 +124,10 @@ router.post('/', analyzeLimiter, upload.single('file'), async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
+    const statusCode = error.status || error.statusCode || 500;
     console.error('API /api/analyze Error:', error.message || error);
-    return res.status(500).json({
-      error: 'Analysis Error',
+    return res.status(statusCode).json({
+      error: statusCode === 429 ? 'Rate Limit Exceeded' : (statusCode === 401 ? 'Authentication Error' : 'Analysis Error'),
       message: error.message || 'An error occurred while analyzing the code snippet.'
     });
   }
@@ -168,9 +169,10 @@ router.post('/explain', explainLimiter, async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
+    const statusCode = error.status || error.statusCode || 500;
     console.error('API /api/analyze/explain Error:', error.message || error);
-    return res.status(500).json({
-      error: 'Diagnostic Error',
+    return res.status(statusCode).json({
+      error: statusCode === 429 ? 'Rate Limit Exceeded' : (statusCode === 401 ? 'Authentication Error' : 'Diagnostic Error'),
       message: error.message || 'Failed to generate diagnostic explanation for this finding.'
     });
   }
