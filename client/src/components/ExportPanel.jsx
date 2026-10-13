@@ -61,199 +61,37 @@ ${analysisData.refactoredCode}
     const contentWidth = pageWidth - (margin * 2); // 182mm
     const maxY = 268; // Leave margin for footer
 
-    // Syntax & Operator Normalizer: converts fullwidth & math operators to standard ASCII
-    const normalizeSyntaxAndOperators = (str) => {
-      if (!str) return '';
-      return String(str)
-        .replace(/[\uFF1D\uFE66\u2254]/g, '=')
-        .replace(/\u2260/g, '!=')
-        .replace(/\u2264/g, '<=')
-        .replace(/\u2265/g, '>=')
-        .replace(/[\u2192\u21D2]/g, '=>')
-        .replace(/\uFF0B/g, '+')
-        .replace(/[\uFF0D\u2212\u2010-\u2015\uFE58\uFE63]/g, '-')
-        .replace(/[\uFF0A\u2217\u00D7]/g, '*')
-        .replace(/[\uFF0F\u00F7]/g, '/')
-        .replace(/\uFF1C/g, '<')
-        .replace(/\uFF1E/g, '>')
-        .replace(/\uFF1A/g, ':')
-        .replace(/\uFF1B/g, ';')
-        .replace(/\uFF0C/g, ',')
-        .replace(/\uFF08/g, '(')
-        .replace(/\uFF09/g, ')')
-        .replace(/\uFF5B/g, '{')
-        .replace(/\uFF5D/g, '}')
-        .replace(/\uFF3B/g, '[')
-        .replace(/\uFF3D/g, ']')
-        .replace(/\uFF01/g, '!')
-        .replace(/\uFF06/g, '&')
-        .replace(/\uFF5C/g, '|')
-        .replace(/\uFF05/g, '%');
-    };
-
-    // Syntax & Operator Integrity Sanitizer:
-    // Ensures missing '=' in variable declarations and assignments are restored
-    const repairCodeSyntax = (codeStr) => {
-      if (!codeStr) return '';
-      let s = normalizeSyntaxAndOperators(codeStr);
-      // Fix missing '=' in JS/TS variable declarations:
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+await\s+/g, '$1 $2 = await ');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+fetch\s*\(/g, '$1 $2 = await fetch(');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(["'`])/g, '$1 $2 = $3');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+([{\[])/g, '$1 $2 = $3');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(\d+)\b/g, '$1 $2 = $3');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(true|false|null|undefined)\b/g, '$1 $2 = $3');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+new\s+/g, '$1 $2 = new ');
-      s = s.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+([a-zA-Z0-9_$]+)\s*\(/g, (m, p1, p2, p3) => {
-        if (p3 === 'async' || p3 === 'function') return m;
-        return `${p1} ${p2} = ${p3}(`;
-      });
-      // Fix missing '=' in Python assignments:
-      s = s.replace(/^(\s*)([a-zA-Z0-9_.]+)\s+await\s+/gm, '$1$2 = await ');
-      return s;
-    };
-
-    // Text Sanitizer: removes weird bullets, invisible chars, and converts unicode to clean ASCII
+    // Text Sanitizer: remove abnormal spacing and convert unicode to pure ASCII
+    // Prevents jsPDF 16-bit double-byte corruptions (spaced-out characters 'A l g o r i t h m s' and quote ' replacement)
     const cleanStr = (str) => {
       if (!str) return '';
       return String(str)
         .replace(/\t/g, '  ')
-        // Strip invisible characters, zero-width spaces, BOM, soft hyphens
-        .replace(/[\u200B-\u200D\uFEFF\u00AD\u200E\u200F\u061C\u2060-\u2064\u206A-\u206F\uFFF0-\uFFFF]/g, '')
-        // Strip control characters (except \r, \n)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Normalize quotes & dashes
-        .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
-        .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
-        .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+        .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+        .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB]/g, '')
+        .replace(/[\u2713\u2714\u221A]/g, '')
+        .replace(/[\u2715\u2716\u2717\u2718]/g, '')
         .replace(/\u2026/g, '...')
-        // Normalize weird bullets, decorative symbols, arrows
-        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB\u25AA\u25AB\u25B6\u25B8\u25C6\u25C7\u27A4\u2794\u27A2\u00B7]/g, '-')
-        // Checkmarks & crosses
-        .replace(/[\u2713\u2714\u221A]/g, '[PASS]')
-        .replace(/[\u2715\u2716\u2717\u2718]/g, '[FAIL]')
-        // Non-breaking spaces and unicode spaces
-        .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
-        // Normalize operators before non-ASCII stripping
-        .replace(/[\uFF1D\uFE66\u2254]/g, '=')
-        .replace(/\u2260/g, '!=')
-        .replace(/\u2264/g, '<=')
-        .replace(/\u2265/g, '>=')
-        .replace(/[\u2192\u21D2]/g, '=>')
-        // Strip remaining non-ASCII characters that WinAnsi/Helvetica cannot render
         .replace(/[^\x20-\x7E\r\n]/g, '')
         .replace(/[ \t]+/g, ' ')
         .trim();
     };
 
-    // Code Line Sanitizer: maintains exact indentation while cleaning corrupting non-ASCII
+    // Code Line Sanitizer: maintains indentation while cleaning corrupting unicode
     const sanitizeCodeLine = (str) => {
       if (!str) return '';
-      let line = String(str)
+      return String(str)
         .replace(/\t/g, '  ')
-        // Strip invisible characters, zero-width spaces, BOM, soft hyphens
-        .replace(/[\u200B-\u200D\uFEFF\u00AD\u200E\u200F\u061C\u2060-\u2064\u206A-\u206F\uFFF0-\uFFFF]/g, '')
-        // Strip control characters (except \r, \n)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
-        // Normalize syntax operators FIRST so '=' and others are never lost!
-        .replace(/[\uFF1D\uFE66\u2254]/g, '=')
-        .replace(/\u2260/g, '!=')
-        .replace(/\u2264/g, '<=')
-        .replace(/\u2265/g, '>=')
-        .replace(/[\u2192\u21D2]/g, '=>')
-        .replace(/\uFF0B/g, '+')
-        .replace(/[\uFF0D\u2212\u2010-\u2015\uFE58\uFE63]/g, '-')
-        .replace(/[\uFF0A\u2217\u00D7]/g, '*')
-        .replace(/[\uFF0F\u00F7]/g, '/')
-        .replace(/\uFF1C/g, '<')
-        .replace(/\uFF1E/g, '>')
-        .replace(/\uFF1A/g, ':')
-        .replace(/\uFF1B/g, ';')
-        .replace(/\uFF0C/g, ',')
-        .replace(/\uFF08/g, '(')
-        .replace(/\uFF09/g, ')')
-        .replace(/\uFF5B/g, '{')
-        .replace(/\uFF5D/g, '}')
-        .replace(/\uFF3B/g, '[')
-        .replace(/\uFF3D/g, ']')
-        .replace(/\uFF01/g, '!')
-        .replace(/\uFF06/g, '&')
-        .replace(/\uFF5C/g, '|')
-        // Normalize quotes, dashes, ellipsis
-        .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
-        .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
-        .replace(/\u2026/g, '...')
-        // Strip weird bullets in comments
-        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB\u25AA\u25AB\u25B6\u25B8\u25C6\u25C7\u27A4\u2794\u27A2\u00B7]/g, '')
+        .replace(/[\u2018\u2019\u201B\u2032]/g, "'")
+        .replace(/[\u201C\u201D\u201F\u2033]/g, '"')
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/[\u2022\u2023\u25E6\u2043\u2219\u25CF\u25CB]/g, '')
         .replace(/[\u2713\u2714\u221A]/g, '')
         .replace(/[\u2715\u2716\u2717\u2718]/g, '')
-        // Normalize special spaces to standard space
-        .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
-        // Strip remaining non-ASCII characters that corrupt courier font
+        .replace(/\u2026/g, '...')
         .replace(/[^\x20-\x7E\r\n]/g, '');
-
-      return line;
-    };
-
-    // Strict Word-Wrap Helper: splits long unbroken words/URLs/comments character-by-character
-    // so they NEVER cross margins in generated PDFs.
-    const splitTextWithWordWrap = (text, maxWidth) => {
-      if (!text) return [];
-      const words = String(text).split(' ');
-      const preparedWords = [];
-
-      for (const word of words) {
-        if (!word) {
-          preparedWords.push('');
-          continue;
-        }
-        if (doc.getTextWidth(word) > maxWidth) {
-          let chunk = '';
-          for (let i = 0; i < word.length; i++) {
-            const char = word[i];
-            if (doc.getTextWidth(chunk + char) <= maxWidth) {
-              chunk += char;
-            } else {
-              if (chunk) preparedWords.push(chunk);
-              chunk = char;
-            }
-          }
-          if (chunk) preparedWords.push(chunk);
-        } else {
-          preparedWords.push(word);
-        }
-      }
-
-      return doc.splitTextToSize(preparedWords.join(' '), maxWidth);
-    };
-
-    // Strict Code Line Wrapper: handles unbroken code tokens, long comments, or strings
-    const splitCodeLineWithWrap = (line, maxWidth) => {
-      if (!line) return [''];
-      if (doc.getTextWidth(line) <= maxWidth) {
-        return [line];
-      }
-      const softWrapped = doc.splitTextToSize(line, maxWidth);
-      const finalChunks = [];
-
-      for (const chunk of softWrapped) {
-        if (doc.getTextWidth(chunk) <= maxWidth) {
-          finalChunks.push(chunk);
-        } else {
-          let sub = '';
-          for (let i = 0; i < chunk.length; i++) {
-            const ch = chunk[i];
-            if (doc.getTextWidth(sub + ch) <= maxWidth) {
-              sub += ch;
-            } else {
-              if (sub) finalChunks.push(sub);
-              sub = ch;
-            }
-          }
-          if (sub) finalChunks.push(sub);
-        }
-      }
-      return finalChunks.length > 0 ? finalChunks : [''];
     };
 
     let yPos = 0;
@@ -453,7 +291,7 @@ ${analysisData.refactoredCode}
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     const summaryClean = cleanStr(analysisData.summary) || 'Comprehensive code analysis completed. Review the detailed sections below.';
-    const sumLines = splitTextWithWordWrap(summaryClean, contentWidth - 10);
+    const sumLines = doc.splitTextToSize(summaryClean, contentWidth - 10);
     const sumBoxHeight = Math.max(16, (sumLines.length * 4.2) + 9);
 
     ensureSpace(sumBoxHeight + 6);
@@ -544,8 +382,8 @@ ${analysisData.refactoredCode}
         const issue = cleanStr(bug.issue);
         const fix = cleanStr(bug.recommendation);
 
-        const issueLines = splitTextWithWordWrap(issue, contentWidth - 36);
-        const fixLines = splitTextWithWordWrap(`Fix: ${fix}`, contentWidth - 36);
+        const issueLines = doc.splitTextToSize(issue, contentWidth - 36);
+        const fixLines = doc.splitTextToSize(`Fix: ${fix}`, contentWidth - 36);
         const cardH = Math.max(15, (issueLines.length + fixLines.length) * 4 + 7);
 
         ensureSpace(cardH + 2, 'Bugs & Logic Exceptions');
@@ -568,7 +406,7 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
-        const lineDisplay = line.length > 40 ? `${line.substring(0, 39)}...` : line;
+        const lineDisplay = line.length > 40 ? `${line.substring(0, 39)}…` : line;
         doc.text(lineDisplay, margin + 21, yPos + 6.5);
 
         // Issue description
@@ -599,7 +437,7 @@ ${analysisData.refactoredCode}
         const title = cleanStr(perf.title);
         const detail = cleanStr(perf.detail);
 
-        const detailLines = splitTextWithWordWrap(detail, contentWidth - 36);
+        const detailLines = doc.splitTextToSize(detail, contentWidth - 36);
         const cardH = Math.max(14, (detailLines.length * 4) + 10);
 
         ensureSpace(cardH + 2, 'Performance Bottlenecks');
@@ -621,7 +459,7 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(15, 23, 42);
-        const titleDisplay = title.length > 40 ? `${title.substring(0, 39)}...` : title;
+        const titleDisplay = title.length > 40 ? `${title.substring(0, 39)}…` : title;
         doc.text(titleDisplay, margin + 21, yPos + 6.5);
 
         // Detail
@@ -646,8 +484,8 @@ ${analysisData.refactoredCode}
         const vuln = cleanStr(sec.vulnerability);
         const fix = cleanStr(sec.fix);
 
-        const vulnLines = splitTextWithWordWrap(vuln, contentWidth - 36);
-        const fixLines = splitTextWithWordWrap(`Mitigation: ${fix}`, contentWidth - 36);
+        const vulnLines = doc.splitTextToSize(vuln, contentWidth - 36);
+        const fixLines = doc.splitTextToSize(`Mitigation: ${fix}`, contentWidth - 36);
         const cardH = Math.max(15, (vulnLines.length + fixLines.length) * 4 + 7);
 
         ensureSpace(cardH + 2, 'Security Vulnerabilities');
@@ -693,7 +531,7 @@ ${analysisData.refactoredCode}
         const area = cleanStr(sug.area) || 'Best Practice';
         const rec = cleanStr(sug.recommendation);
 
-        const recLines = splitTextWithWordWrap(rec, contentWidth - 36);
+        const recLines = doc.splitTextToSize(rec, contentWidth - 36);
         const cardH = Math.max(13, (recLines.length * 4) + 9);
 
         ensureSpace(cardH + 2, 'Best Practice Suggestions');
@@ -710,14 +548,14 @@ ${analysisData.refactoredCode}
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(6.5);
         doc.setTextColor(71, 85, 105);
-        const areaDisplay = area.length > 15 ? `${area.substring(0, 14)}...` : area;
+        const areaDisplay = area.length > 15 ? `${area.substring(0, 14)}…` : area;
         doc.text(areaDisplay, margin + 4.5, yPos + 6.5);
 
         // Recommendation
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(30, 41, 59);
-        const recLinesFit = splitTextWithWordWrap(rec, contentWidth - areaWidth - 10);
+        const recLinesFit = doc.splitTextToSize(rec, contentWidth - areaWidth - 10);
         doc.text(recLinesFit, margin + areaWidth + 5, yPos + 6.8);
 
         yPos += cardH + 2.5;
@@ -736,10 +574,7 @@ ${analysisData.refactoredCode}
     doc.text('5. AI Refactored Code (Production Implementation)', margin, yPos);
     yPos += 5.5;
 
-    // Retrieve and restore exact code syntax (recovering assignment operators '=' and normal operators)
-    const refactoredRaw = repairCodeSyntax(
-      (analysisData.refactoredCode || rawCode || '// No refactored code available').trim()
-    );
+    const refactoredRaw = (analysisData.refactoredCode || rawCode || '// No refactored code available').trim();
     const rawLines = refactoredRaw.split(/\r?\n/);
 
     const codeLineHeight = 4.2;
@@ -767,9 +602,9 @@ ${analysisData.refactoredCode}
         return;
       }
 
-      // Enforce strict boundary constraints using splitCodeLineWithWrap
+      // Enforce strict boundary constraints using doc.splitTextToSize
       // Every line chunk is mathematically guaranteed to fit within maxCodeTextWidth (164mm)
-      const wrappedChunks = splitCodeLineWithWrap(expandedLine, maxCodeTextWidth);
+      const wrappedChunks = doc.splitTextToSize(expandedLine, maxCodeTextWidth);
 
       wrappedChunks.forEach((chunk, cIdx) => {
         formattedCodeLines.push({

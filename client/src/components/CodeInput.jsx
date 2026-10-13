@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, lazy, Suspense } from 'react';
+import React, { useRef, useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
 import { Play, Upload, Trash2, Code2, Sparkles, Loader2 } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
@@ -71,6 +71,27 @@ export default function CodeInput({
   const codeLines = useMemo(() => (code ? code.split('\n') : ['']), [code]);
   const lineCount = useMemo(() => (code ? codeLines.length : 0), [code, codeLines]);
 
+  // Responsive mobile view detection for adaptive layout bounds
+  const [isMobileView, setIsMobileView] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 1024;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Naturally adapt vertical editor height for mobile based on line count (short code hugs naturally)
+  const mobileEditorHeight = useMemo(() => {
+    // 20px per line (leading-5) + 24px vertical padding (py-3) + 8px buffer
+    const contentHeight = Math.max(codeLines.length, 1) * 20 + 32;
+    return Math.min(Math.max(contentHeight, 130), 380);
+  }, [codeLines.length]);
+
   // Real-time language detection for code snippets
   const detectedInfo = useMemo(() => {
     return detectCodeLanguage(code);
@@ -141,7 +162,7 @@ export default function CodeInput({
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
+    <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-auto lg:h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
       
       {/* Top Bar Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mb-3 shrink-0 w-full">
@@ -249,8 +270,13 @@ export default function CodeInput({
 
       {/* Editor Container (Monaco IDE with Fast Native Editor Fallback) */}
       <div
-        className="relative flex-1 min-h-[280px] h-[320px] sm:h-[380px] lg:h-full lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y box-border"
-        style={{ WebkitOverflowScrolling: 'touch', boxSizing: 'border-box' }}
+        className="relative flex-none lg:flex-1 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col transition-[height] duration-200 ease-out touch-pan-y lg:h-full lg:min-h-0"
+        style={{
+          height: isMobileView ? `${mobileEditorHeight}px` : undefined,
+          minHeight: isMobileView ? '130px' : undefined,
+          maxHeight: isMobileView ? '380px' : undefined,
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         {useMonaco ? (
           <Suspense
@@ -307,11 +333,12 @@ export default function CodeInput({
             />
           </Suspense>
         ) : (
-          <div className="flex-1 flex w-full max-w-full h-full min-h-0 bg-slate-950 overflow-hidden box-border">
+          <div className="flex-1 flex w-full h-full min-h-0 bg-slate-950 overflow-hidden">
             {/* Synchronized Line Numbers Gutter */}
             <div
               ref={lineNumbersRef}
-              className="select-none py-3 pl-2.5 pr-2 text-right font-mono text-xs text-slate-600 bg-slate-950/95 border-r border-slate-800/80 overflow-hidden shrink-0 pointer-events-none box-border w-10 sm:w-11"
+              className="select-none py-3 pl-3 pr-2 text-right font-mono text-xs text-slate-600 bg-slate-950 border-r border-slate-800/80 overflow-y-hidden overflow-x-hidden shrink-0 pointer-events-none"
+              style={{ minWidth: '2.75rem' }}
               aria-hidden="true"
             >
               {codeLines.map((_, i) => (
@@ -321,7 +348,7 @@ export default function CodeInput({
               ))}
             </div>
 
-            {/* Native Code Textarea with High-Performance Mobile Responsiveness & Strict Box-Sizing */}
+            {/* Native Code Textarea with High-Performance Mobile Responsiveness */}
             <textarea
               ref={textareaRef}
               value={code}
@@ -329,13 +356,11 @@ export default function CodeInput({
               onScroll={handleTextareaScroll}
               onKeyDown={handleTextareaKeyDown}
               placeholder="// Paste code here or select a sample preset above..."
-              className="min-w-0 flex-1 w-full max-w-full h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words touch-pan-y box-border"
+              className="flex-1 h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-x-auto overflow-y-auto whitespace-pre touch-pan-y"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 tabSize: 2,
-                wordBreak: 'break-word',
-                overflowWrap: 'break-word',
-                boxSizing: 'border-box'
+                overscrollBehaviorY: 'contain'
               }}
               spellCheck={false}
               autoCapitalize="none"
