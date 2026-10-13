@@ -249,8 +249,8 @@ export default function CodeInput({
 
       {/* Editor Container (Monaco IDE with Fast Native Editor Fallback) */}
       <div
-        className="relative flex-1 min-h-[280px] h-[320px] sm:h-[380px] lg:h-full lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="relative flex-1 min-h-[280px] h-[320px] sm:h-[380px] lg:h-full lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y box-border"
+        style={{ WebkitOverflowScrolling: 'touch', boxSizing: 'border-box' }}
       >
         {useMonaco ? (
           <Suspense
@@ -307,12 +307,11 @@ export default function CodeInput({
             />
           </Suspense>
         ) : (
-          <div className="flex-1 flex w-full h-full min-h-0 bg-slate-950 overflow-hidden">
+          <div className="flex-1 flex w-full max-w-full h-full min-h-0 bg-slate-950 overflow-hidden box-border">
             {/* Synchronized Line Numbers Gutter */}
             <div
               ref={lineNumbersRef}
-              className="select-none py-3 pl-3 pr-2 text-right font-mono text-xs text-slate-600 bg-slate-950 border-r border-slate-800/80 overflow-hidden shrink-0 pointer-events-none"
-              style={{ minWidth: '2.75rem' }}
+              className="select-none py-3 pl-2.5 pr-2 text-right font-mono text-xs text-slate-600 bg-slate-950/95 border-r border-slate-800/80 overflow-hidden shrink-0 pointer-events-none box-border w-10 sm:w-11"
               aria-hidden="true"
             >
               {codeLines.map((_, i) => (
@@ -322,7 +321,7 @@ export default function CodeInput({
               ))}
             </div>
 
-            {/* Native Code Textarea with High-Performance Mobile Responsiveness */}
+            {/* Native Code Textarea with High-Performance Mobile Responsiveness & Strict Box-Sizing */}
             <textarea
               ref={textareaRef}
               value={code}
@@ -330,10 +329,13 @@ export default function CodeInput({
               onScroll={handleTextareaScroll}
               onKeyDown={handleTextareaKeyDown}
               placeholder="// Paste code here or select a sample preset above..."
-              className="flex-1 h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-auto whitespace-pre touch-pan-y"
+              className="min-w-0 flex-1 w-full max-w-full h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-x-auto overflow-y-auto whitespace-pre-wrap break-words touch-pan-y box-border"
               style={{
                 WebkitOverflowScrolling: 'touch',
-                tabSize: 2
+                tabSize: 2,
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                boxSizing: 'border-box'
               }}
               spellCheck={false}
               autoCapitalize="none"

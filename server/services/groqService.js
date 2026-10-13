@@ -388,10 +388,24 @@ function sanitizeAnalysisData(raw, originalCode) {
   // Fix common LLM token drops (e.g. missing '=' in variable declarations or async calls)
   let refactoredCode = raw.refactoredCode || originalCode;
   if (typeof refactoredCode === 'string') {
+    // Normalize fullwidth and math assignment operators to standard '='
+    refactoredCode = refactoredCode.replace(/[\uFF1D\uFE66\u2254]/g, '=');
     // Repair: `const/let/var name await ...` -> `const name = await ...`
     refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+await\s+/g, '$1 $2 = await ');
     // Repair: `const/let/var name fetch(` -> `const name = await fetch(`
     refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+fetch\s*\(/g, '$1 $2 = await fetch(');
+    // Repair: `const/let/var name "..."` or `'...'` -> `const name = '...'`
+    refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(["'`])/g, '$1 $2 = $3');
+    // Repair: `const/let/var name { / [` -> `const name = { / [`
+    refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+([{\[])/g, '$1 $2 = $3');
+    // Repair: `const/let/var name 123` -> `const name = 123`
+    refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(\d+)\b/g, '$1 $2 = $3');
+    // Repair: `const/let/var name true/false/null/undefined` -> `const name = true`
+    refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+(true|false|null|undefined)\b/g, '$1 $2 = $3');
+    // Repair: `const/let/var name new ClassName` -> `const name = new ClassName`
+    refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+new\s+/g, '$1 $2 = new ');
+    // Repair Python assignments missing '=':
+    refactoredCode = refactoredCode.replace(/^(\s*)([a-zA-Z0-9_.]+)\s+await\s+/gm, '$1$2 = await ');
     // Remove standalone TODO stubs while preserving valid explanatory comments
     refactoredCode = refactoredCode
       .replace(/\/\/\s*TODO:\s*generate\s+JWT[^\r\n]*/gi, '// Authentication successful')
