@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
-import { Play, Upload, Trash2, Code2, Sparkles, Loader2 } from 'lucide-react';
+import { Play, Upload, Trash2, Code2, Sparkles, Loader2, X, Copy, Check } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
 import { detectCodeLanguage } from '../utils/languageDetector';
 import LanguageDropdown from './LanguageDropdown';
@@ -48,6 +48,14 @@ export default function CodeInput({
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const [useMonaco, setUseMonaco] = useState(() => {
     if (typeof window === 'undefined') return true;
     try {
@@ -278,6 +286,29 @@ export default function CodeInput({
           WebkitOverflowScrolling: 'touch'
         }}
       >
+        {/* Floating Quick Actions (Copy & Clear Cross Button) */}
+        {code && (
+          <div className="absolute top-2 right-2.5 z-20 flex items-center space-x-1.5 opacity-85 hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              className="p-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 backdrop-blur-md shadow-md active:scale-90 transition-all cursor-pointer"
+              title="Copy Code"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCode('')}
+              disabled={isAnalyzing}
+              className="p-1.5 rounded-lg bg-slate-900/90 hover:bg-rose-950/90 text-slate-400 hover:text-rose-400 border border-slate-700/80 backdrop-blur-md shadow-md active:scale-90 transition-all cursor-pointer"
+              title="Clear Code"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {useMonaco ? (
           <Suspense
             fallback={
@@ -378,6 +409,21 @@ export default function CodeInput({
           <span>{lineCount} lines</span>
           <span>•</span>
           <span>{code.length} chars</span>
+          {code && (
+            <>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setCode('')}
+                disabled={isAnalyzing}
+                className="inline-flex items-center space-x-1 text-[11px] text-slate-400 hover:text-rose-400 active:scale-95 transition-colors cursor-pointer"
+                title="Clear all code"
+              >
+                <X className="w-3 h-3 text-rose-400" />
+                <span>Clear</span>
+              </button>
+            </>
+          )}
         </div>
 
         <button
