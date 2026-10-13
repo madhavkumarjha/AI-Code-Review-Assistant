@@ -6,6 +6,7 @@ import AnalysisDashboard from './components/AnalysisDashboard';
 import ProgressToast from './components/ProgressToast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AlertCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { normalizeCodeFormatting } from './utils/codeFormatter';
 
 export default function App() {
   const [code, setCode] = useState('');
@@ -20,6 +21,15 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
+
+  // Automatically format code if input contains literal \n or \r\n escape sequences
+  const handleSetCode = (input) => {
+    if (typeof input === 'string' && (input.includes('\\n') || input.includes('\\r\\n'))) {
+      setCode(normalizeCodeFormatting(input));
+    } else {
+      setCode(input);
+    }
+  };
 
   // Handle Code Analysis Request
   const handleAnalyze = async () => {
@@ -49,6 +59,7 @@ export default function App() {
 
       setAnalysisData({
         ...resData.data,
+        refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
         isFallback: Boolean(resData.isFallback)
       });
       setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
@@ -100,6 +111,7 @@ export default function App() {
 
       setAnalysisData({
         ...resData.data,
+        refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
         isFallback: Boolean(resData.isFallback)
       });
       setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
@@ -159,7 +171,7 @@ export default function App() {
             >
               <CodeInput
                 code={code}
-                setCode={setCode}
+                setCode={handleSetCode}
                 language={language}
                 setLanguage={setLanguage}
                 onAnalyze={handleAnalyze}

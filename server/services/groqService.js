@@ -388,6 +388,23 @@ function sanitizeAnalysisData(raw, originalCode) {
   // Fix common LLM token drops (e.g. missing '=' in variable declarations or async calls)
   let refactoredCode = raw.refactoredCode || originalCode;
   if (typeof refactoredCode === 'string') {
+    // Unescape literal \n, \r\n, \t, and escaped quotes from LLM JSON responses
+    if (refactoredCode.includes('\\n') || refactoredCode.includes('\\r\\n')) {
+      refactoredCode = refactoredCode
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n');
+    }
+    if (refactoredCode.includes('\\r')) {
+      refactoredCode = refactoredCode.replace(/\\r/g, '');
+    }
+    if (refactoredCode.includes('\\t')) {
+      refactoredCode = refactoredCode.replace(/\\t/g, '    ');
+    }
+    if (refactoredCode.includes('\\"')) {
+      refactoredCode = refactoredCode.replace(/\\"/g, '"');
+    }
+    refactoredCode = refactoredCode.replace(/\r\n/g, '\n');
+
     // Repair: `const/let/var name await ...` -> `const name = await ...`
     refactoredCode = refactoredCode.replace(/\b(const|let|var)\s+([a-zA-Z0-9_$]+)\s+await\s+/g, '$1 $2 = await ');
     // Repair: `const/let/var name fetch(` -> `const name = await fetch(`

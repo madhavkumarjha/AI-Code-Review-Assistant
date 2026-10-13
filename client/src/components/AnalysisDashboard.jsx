@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import {
@@ -19,6 +19,7 @@ import ExportPanel from './ExportPanel';
 import ScoreRing from './ScoreRing';
 import DiffViewer from './DiffViewer';
 import ExplainModal from './ExplainModal';
+import { normalizeCodeFormatting } from '../utils/codeFormatter';
 
 // Severity badge formatting with standard labels
 const getSeverityMeta = (level) => {
@@ -208,29 +209,32 @@ SuggestionsSection.propTypes = {
   suggestions: PropTypes.array.isRequired
 };
 
-const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopied }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2 h-full flex flex-col">
-    <div className="flex items-center justify-between shrink-0">
-      <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-        <Code2 className="w-4 h-4" />
-        <span>Production-Ready Refactored Code</span>
+const RefactoredSection = React.memo(({ refactoredCode, handleCopyCode, codeCopied }) => {
+  const cleanCode = normalizeCodeFormatting(refactoredCode);
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 pt-2 h-full flex flex-col">
+      <div className="flex items-center justify-between shrink-0">
+        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+          <Code2 className="w-4 h-4" />
+          <span>Production-Ready Refactored Code</span>
+        </div>
+        <button
+          onClick={handleCopyCode}
+          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[11px] text-emerald-400 border border-emerald-500/30 font-mono transition-all cursor-pointer"
+        >
+          {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
+        </button>
       </div>
-      <button
-        onClick={handleCopyCode}
-        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-[11px] text-emerald-400 border border-emerald-500/30 font-mono transition-all cursor-pointer"
+      <div
+        className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-x touch-pan-y"
+        style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
       >
-        {codeCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-        <span>{codeCopied ? 'Copied' : 'Copy Code'}</span>
-      </button>
-    </div>
-    <div
-      className="bg-slate-950 rounded-xl border border-slate-800 p-3 sm:p-4 font-mono text-xs text-slate-200 overflow-x-auto leading-6 flex-1 shadow-inner w-full max-w-full touch-pan-x touch-pan-y"
-      style={{ WebkitOverflowScrolling: 'touch', whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace' }}
-    >
-      <pre className="whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full leading-6"><code className="break-words font-mono">{refactoredCode}</code></pre>
-    </div>
-  </motion.div>
-));
+        <pre className="whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full leading-6"><code className="break-words font-mono">{cleanCode}</code></pre>
+      </div>
+    </motion.div>
+  );
+});
 RefactoredSection.displayName = 'RefactoredSection';
 RefactoredSection.propTypes = {
   refactoredCode: PropTypes.string,
@@ -268,8 +272,16 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
     isFallback = false
   } = analysisData;
 
+  const formattedRefactoredCode = useMemo(() => {
+    return normalizeCodeFormatting(refactoredCode);
+  }, [refactoredCode]);
+
+  const formattedRawCode = useMemo(() => {
+    return normalizeCodeFormatting(rawCode);
+  }, [rawCode]);
+
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(refactoredCode || '');
+    navigator.clipboard.writeText(formattedRefactoredCode || '');
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 2000);
   };
@@ -414,14 +426,14 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
         {/* 5. DIFF TAB (V2 Killer Feature) */}
         {activeTab === 'diff' && (
           <div className="h-[380px] sm:h-[420px] w-full max-w-full overflow-hidden">
-            <DiffViewer originalCode={rawCode} refactoredCode={refactoredCode} />
+            <DiffViewer originalCode={formattedRawCode} refactoredCode={formattedRefactoredCode} />
           </div>
         )}
 
         {/* 6. REFACTORED CODE */}
         {activeTab === 'refactored' && (
           <RefactoredSection
-            refactoredCode={refactoredCode}
+            refactoredCode={formattedRefactoredCode}
             handleCopyCode={handleCopyCode}
             codeCopied={codeCopied}
           />
@@ -430,7 +442,10 @@ export default function AnalysisDashboard({ analysisData, executionTimeMs, rawCo
       </div>
 
       {/* Export Panel Footer */}
-      <ExportPanel analysisData={analysisData} rawCode={rawCode} />
+      <ExportPanel
+        analysisData={{ ...analysisData, refactoredCode: formattedRefactoredCode }}
+        rawCode={formattedRawCode}
+      />
 
       {/* AI Disclaimer */}
       {/* <div className="text-xs text-center text-slate-400 max-w-lg mx-auto mt-4 px-3 flex items-center justify-center gap-1.5 leading-relaxed font-sans">

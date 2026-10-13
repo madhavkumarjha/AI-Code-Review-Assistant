@@ -2,19 +2,24 @@ import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { diffLines } from 'diff';
 import { Check, Copy, Columns, AlignJustify } from 'lucide-react';
+import { normalizeCodeFormatting } from '../utils/codeFormatter';
 
 export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'unified'
   const [copied, setCopied] = useState(false);
 
+  // Automatically normalize literal \n and escape sequences
+  const cleanOriginal = useMemo(() => normalizeCodeFormatting(originalCode), [originalCode]);
+  const cleanRefactored = useMemo(() => normalizeCodeFormatting(refactoredCode), [refactoredCode]);
+
   // Compute unified diff chunks
   const diffChunks = useMemo(() => {
-    if (!originalCode && !refactoredCode) return [];
-    return diffLines(originalCode || '', refactoredCode || '');
-  }, [originalCode, refactoredCode]);
+    if (!cleanOriginal && !cleanRefactored) return [];
+    return diffLines(cleanOriginal || '', cleanRefactored || '');
+  }, [cleanOriginal, cleanRefactored]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(refactoredCode || '');
+    navigator.clipboard.writeText(cleanRefactored || '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -83,7 +88,7 @@ export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
                 Original Input
               </div>
               <pre className="text-slate-300 leading-5 whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full">
-                <code className="break-words font-mono">{originalCode || '// No original code'}</code>
+                <code className="break-words font-mono">{cleanOriginal || '// No original code'}</code>
               </pre>
             </div>
 
@@ -96,7 +101,7 @@ export default function DiffViewer({ originalCode = '', refactoredCode = '' }) {
                 AI Refactored Result
               </div>
               <pre className="text-emerald-200 leading-5 whitespace-pre-wrap break-words font-mono overflow-x-auto w-full max-w-full">
-                <code className="break-words font-mono">{refactoredCode || '// No refactored code'}</code>
+                <code className="break-words font-mono">{cleanRefactored || '// No refactored code'}</code>
               </pre>
             </div>
           </div>
