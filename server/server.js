@@ -25,27 +25,33 @@ const trustProxyVal = process.env.TRUST_PROXY !== undefined
 app.set('trust proxy', trustProxyVal);
 
 
-// Configurable CORS supporting Vercel Frontend & Local Dev
+// Configurable Strict CORS: explicitly authorized production domains & local dev
 const allowedOrigins = [
   'https://ai-code-review-assistant-sand.vercel.app',
-  process.env.ALLOWED_ORIGIN
+  'https://review-assistant-sand.vercel.app',
+  process.env.ALLOWED_ORIGIN,
+  process.env.CLIENT_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like server-to-server Vercel rewrites or curl)
+    // Allow requests with no origin (like server-to-server Vercel rewrites or internal probes)
     if (!origin) return callback(null, true);
 
-    // Allow explicitly defined origins, all vercel preview domains, or local dev
+    // Allow explicitly defined origins
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+
+    // Allow localhost during local development
     if (
-      allowedOrigins.includes(origin) ||
-      allowedOrigins.includes('*') ||
-      origin.endsWith('.vercel.app') ||
-      process.env.NODE_ENV !== 'production'
+      process.env.NODE_ENV !== 'production' &&
+      (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))
     ) {
       return callback(null, true);
     }
-    const corsErr = new Error('CORS origin denied by server policy');
+
+    const corsErr = new Error(`CORS origin '${origin}' denied by server security policy`);
     corsErr.status = 403;
     corsErr.name = 'CORS Forbidden';
     return callback(corsErr);
@@ -55,13 +61,13 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate Limiter for API Protection (50 requests per 15 minutes)
+// Global Rate Limiter for API Protection (100 requests per 15 minutes)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 100,
   message: {
     error: 'Rate Limit Exceeded',
-    message: 'Too many code analysis requests from this IP, please try again after 15 minutes.'
+    message: 'Too many requests from this IP, please try again after 15 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false

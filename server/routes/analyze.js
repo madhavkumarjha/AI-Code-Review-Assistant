@@ -1,8 +1,33 @@
 const express = require('express');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const upload = require('../middleware/upload');
 const { analyzeCode, explainFinding } = require('../services/groqService');
+
+// Dedicated Rate Limiter for primary Code Analysis (50 requests per 15 minutes)
+const analyzeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: {
+    error: 'Rate Limit Exceeded',
+    message: 'Too many code analysis requests from this IP. Please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Stricter Dedicated Rate Limiter for On-Demand Diagnostic Explanations (25 requests per 15 minutes)
+const explainLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  message: {
+    error: 'Rate Limit Exceeded',
+    message: 'Too many diagnostic explanation requests from this IP. Please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 // In-memory cache with TTL (1 hour) for fast repeated analysis requests
 const responseCache = new Map();
@@ -19,7 +44,7 @@ const sanitizeCode = (input) => {
 };
 
 // POST /api/analyze - Accepts JSON or Multipart File Upload
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', analyzeLimiter, upload.single('file'), async (req, res) => {
   try {
     let rawCode = '';
     let language = 'Auto-detect';
@@ -108,7 +133,7 @@ router.post('/', upload.single('file'), async (req, res) => {
 });
 
 // POST /api/analyze/explain - On-demand AI diagnostic explanation for a specific finding
-router.post('/explain', async (req, res) => {
+router.post('/explain', explainLimiter, async (req, res) => {
   try {
     const { finding, code = '', language = 'JavaScript' } = req.body || {};
 

@@ -202,14 +202,12 @@ Provide your full code review in the required structured JSON format. Ensure all
   try {
     const startTime = Date.now();
 
-    // Active models supported by the current Groq API key
+    // Verified active Groq model IDs (configurable via GROQ_MODEL env)
     const modelsToTry = [
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
-      'qwen/qwen3.8-27b',
+      process.env.GROQ_MODEL,
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant'
-    ];
+    ].filter(Boolean);
 
     let response = null;
     let lastModelError = null;
@@ -684,13 +682,12 @@ ${code.slice(0, 3000)}
 
 Provide a deep technical diagnosis explaining the root cause, runtime impact, clean remediation code, and best practice.`;
 
+  // Verified active Groq model IDs
   const modelsToTry = [
-    'openai/gpt-oss-120b',
-    'openai/gpt-oss-20b',
-    'qwen/qwen3.8-27b',
+    process.env.GROQ_MODEL,
     'llama-3.3-70b-versatile',
     'llama-3.1-8b-instant'
-  ];
+  ].filter(Boolean);
 
   for (const model of modelsToTry) {
     try {
