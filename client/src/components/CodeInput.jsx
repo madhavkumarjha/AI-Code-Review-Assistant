@@ -27,6 +27,14 @@ const LANGUAGE_TO_MONACO = {
   'SQL': 'sql'
 };
 
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.innerWidth < 768 ||
+    /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
+};
+
 export default function CodeInput({
   code,
   setCode,
@@ -37,11 +45,31 @@ export default function CodeInput({
   onFileUpload
 }) {
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
+  const lineNumbersRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [useMonaco, setUseMonaco] = useState(true);
+  const [useMonaco, setUseMonaco] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const saved = sessionStorage.getItem('preferred_editor_mode');
+      if (saved !== null) return saved === 'monaco';
+    } catch (_) {}
+    return !isMobileDevice();
+  });
+
+  const toggleEditorMode = () => {
+    setUseMonaco((prev) => {
+      const next = !prev;
+      try {
+        sessionStorage.setItem('preferred_editor_mode', next ? 'monaco' : 'simple');
+      } catch (_) {}
+      return next;
+    });
+  };
 
   // Line count calculation
-  const lineCount = useMemo(() => (code ? code.split('\n').length : 0), [code]);
+  const codeLines = useMemo(() => (code ? code.split('\n') : ['']), [code]);
+  const lineCount = useMemo(() => (code ? codeLines.length : 0), [code, codeLines]);
 
   // Real-time language detection for code snippets
   const detectedInfo = useMemo(() => {
@@ -54,6 +82,30 @@ export default function CodeInput({
     }
     return detectedInfo.monacoLang;
   }, [language, detectedInfo]);
+
+  // Synchronize textarea scrolling with line number gutter
+  const handleTextareaScroll = (e) => {
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = e.target.scrollTop;
+    }
+  };
+
+  // Enable Tab indentation in textarea
+  const handleTextareaKeyDown = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      const val = e.target.value;
+      const newVal = val.substring(0, start) + '  ' + val.substring(end);
+      setCode(newVal);
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
+        }
+      });
+    }
+  };
 
   // Disable intrusive false-positive syntax error squiggles for snippets
   const handleEditorBeforeMount = (monaco) => {
@@ -109,8 +161,31 @@ export default function CodeInput({
           )}
         </div>
 
-        {/* Action Buttons: Upload & Clear */}
+        {/* Action Buttons: Mode Toggle, Upload & Clear */}
         <div className="flex items-center space-x-1.5 sm:space-x-2">
+          <button
+            onClick={toggleEditorMode}
+            type="button"
+            className={`inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg border transition-all shadow-sm shrink-0 cursor-pointer ${
+              useMonaco
+                ? 'bg-cyan-950/50 text-cyan-300 border-cyan-700/80 hover:bg-cyan-900/60'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+            title={useMonaco ? 'Switch to Fast Mobile Editor' : 'Switch to Monaco IDE'}
+          >
+            {useMonaco ? (
+              <>
+                <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-[11px]">IDE</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[11px]">Fast</span>
+              </>
+            )}
+          </button>
+
           <input
             type="file"
             ref={fileInputRef}
@@ -172,16 +247,24 @@ export default function CodeInput({
         </div>
       </div>
 
-      {/* Editor Container (Monaco with Textarea Fallback) */}
+      {/* Editor Container (Monaco IDE with Fast Native Editor Fallback) */}
       <div
-        className="relative flex-1 min-h-[260px] lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y"
+        className="relative flex-1 min-h-[280px] h-[320px] sm:h-[380px] lg:h-full lg:min-h-0 w-full max-w-full bg-slate-950 rounded-xl border border-slate-800 overflow-hidden shadow-inner flex flex-col touch-pan-y"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {useMonaco ? (
           <Suspense
             fallback={
-              <div className="flex-1 flex items-center justify-center text-xs text-slate-500 font-mono">
-                Loading Monaco Engine...
+              <div className="flex-1 flex flex-col items-center justify-center text-xs text-slate-500 font-mono space-y-2 p-4">
+                <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                <span>Loading Monaco IDE Engine...</span>
+                <button
+                  type="button"
+                  onClick={() => setUseMonaco(false)}
+                  className="text-[11px] text-cyan-400 underline hover:text-cyan-300 mt-1 cursor-pointer"
+                >
+                  Switch to Fast Editor
+                </button>
               </div>
             }
           >
@@ -192,6 +275,13 @@ export default function CodeInput({
               value={code}
               onChange={(val) => setCode(val || '')}
               beforeMount={handleEditorBeforeMount}
+              onMount={(editor) => {
+                setTimeout(() => {
+                  try {
+                    editor.layout();
+                  } catch (_) {}
+                }, 100);
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize: 13,
@@ -217,14 +307,40 @@ export default function CodeInput({
             />
           </Suspense>
         ) : (
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="// Paste code here or select a sample preset..."
-            className="w-full h-full p-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs resize-none focus:outline-none overflow-x-auto whitespace-pre touch-pan-y"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-            spellCheck="false"
-          />
+          <div className="flex-1 flex w-full h-full min-h-0 bg-slate-950 overflow-hidden">
+            {/* Synchronized Line Numbers Gutter */}
+            <div
+              ref={lineNumbersRef}
+              className="select-none py-3 pl-3 pr-2 text-right font-mono text-xs text-slate-600 bg-slate-950 border-r border-slate-800/80 overflow-hidden shrink-0 pointer-events-none"
+              style={{ minWidth: '2.75rem' }}
+              aria-hidden="true"
+            >
+              {codeLines.map((_, i) => (
+                <div key={i + 1} className="h-5 leading-5 text-[11px] text-slate-500 font-mono">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Native Code Textarea with High-Performance Mobile Responsiveness */}
+            <textarea
+              ref={textareaRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onScroll={handleTextareaScroll}
+              onKeyDown={handleTextareaKeyDown}
+              placeholder="// Paste code here or select a sample preset above..."
+              className="flex-1 h-full py-3 px-3 bg-transparent text-slate-100 placeholder-slate-600 font-mono text-xs leading-5 resize-none focus:outline-none overflow-auto whitespace-pre touch-pan-y"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                tabSize: 2
+              }}
+              spellCheck={false}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+            />
+          </div>
         )}
       </div>
 
