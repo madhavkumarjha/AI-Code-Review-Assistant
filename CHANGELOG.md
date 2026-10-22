@@ -4,6 +4,14 @@ All notable changes are documented here. Format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added (V3 Phase 2 - Run Code Workspace & Sandboxed Runtimes)
+- **Run Code Workspace**: Editor integrated "Run Code" execution button with real-time terminal output, execution status, and timing metrics.
+- **In-Browser Web Worker Runtime**: Ultra-fast isolated browser sandbox for JavaScript and TypeScript execution with captured STDOUT (`console.log`) and STDERR (`console.error`).
+- **Secure Sandboxed Backend Runner (`POST /api/execute`)**: Backend execution runner supporting Python (`CPython 3.14`), C/C++ (compiler check & safe standard I/O simulator), and isolated Node.js fallback.
+- **Strict Decoupling Policy & UI Disclaimer**: Explicit contract and disclaimer clarifying that code execution success does not imply bug-free code, and zero AI findings does not guarantee crash-free execution.
+- **4000ms Infinite-Loop & Timeout Protection**: Hard process timeout protection terminating frozen or infinite-loop scripts with exit code `124`.
+- **Dedicated Terminal Component (`CodeWorkspaceTerminal`)**: Multi-tab output terminal with tabs for STDOUT, STDERR/Stack Trace, exit code display, and one-click clear.
+
 ### Added (V3 Phase 1 - Multi-File Review & Large File Chunking)
 - **Multi-File Workspace**: Support for uploading and editing up to 10 files simultaneously via file picker, drag-and-drop, and dynamic `+ Add File` tabs.
 - **`POST /api/analyze/multi`**: Dedicated multi-file batch review endpoint returning project-level aggregate metrics (`overallScore`, `totalBugs`, `totalSecurityIssues`, `totalPerformanceIssues`) and file-by-file structured reviews.

@@ -1,9 +1,11 @@
 import React, { useRef, useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
-import { Play, Upload, Trash2, Code2, Sparkles, Loader2, X, Copy, Check, Plus, FileCode, Layers } from 'lucide-react';
+import { Play, Upload, Trash2, Code2, Sparkles, Loader2, X, Copy, Check, Plus, FileCode, Layers, Terminal } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
 import { detectCodeLanguage } from '../utils/languageDetector';
 import LanguageDropdown from './LanguageDropdown';
+import CodeWorkspaceTerminal from './CodeWorkspaceTerminal';
+import { executeCode } from '../utils/codeRunner';
 
 // Lazy-load Monaco Editor for optimal bundle performance
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
@@ -55,6 +57,35 @@ export default function CodeInput({
   const [isUploading, setIsUploading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Phase 2: In-browser / sandboxed execution states
+  const [isRunningCode, setIsRunningCode] = useState(false);
+  const [executionOutput, setExecutionOutput] = useState(null);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+
+  const handleRunCode = async () => {
+    if (!code.trim() || isRunningCode) return;
+    setIsRunningCode(true);
+    setIsTerminalOpen(true);
+    try {
+      const activeLanguage = language && language !== 'Auto-detect' ? language : (detectedInfo?.displayName || 'JavaScript');
+      const res = await executeCode(code, activeLanguage);
+      setExecutionOutput(res);
+    } catch (err) {
+      setExecutionOutput({
+        success: false,
+        status: 'Error',
+        stdout: '',
+        stderr: err?.message || 'Execution error encountered.',
+        exitCode: 1,
+        executionTimeMs: 0,
+        runtime: 'Local Sandbox',
+        language: language || 'Code'
+      });
+    } finally {
+      setIsRunningCode(false);
+    }
+  };
 
   const handleCopyCode = () => {
     if (!code) return;
@@ -299,6 +330,23 @@ export default function CodeInput({
             <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
           </button>
 
+          <button
+            onClick={() => setIsTerminalOpen((prev) => !prev)}
+            type="button"
+            className={`inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg border transition-all shadow-sm shrink-0 cursor-pointer ${
+              isTerminalOpen
+                ? 'bg-emerald-950/70 text-emerald-300 border-emerald-600/70 shadow-emerald-500/10'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+            title={isTerminalOpen ? 'Hide Execution Terminal' : 'Show Execution Terminal'}
+          >
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[11px] hidden sm:inline">Terminal</span>
+            {executionOutput && (
+              <span className={`w-1.5 h-1.5 rounded-full ${executionOutput.exitCode === 0 ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+            )}
+          </button>
+
           {code && (
             <button
               onClick={() => setCode('')}
@@ -514,6 +562,18 @@ export default function CodeInput({
         )}
       </div>
 
+      {/* Code Execution Terminal Output Panel */}
+      {(isTerminalOpen || isRunningCode) && (
+        <div className="w-full shrink-0">
+          <CodeWorkspaceTerminal
+            outputData={executionOutput}
+            isRunning={isRunningCode}
+            onClose={() => setIsTerminalOpen(false)}
+            onClear={() => setExecutionOutput(null)}
+          />
+        </div>
+      )}
+
       {/* Footer Info & Analyze CTA */}
       <div className="mt-3 sm:mt-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0 w-full">
         <div className="text-xs text-slate-500 font-mono flex items-center space-x-2">
@@ -542,27 +602,55 @@ export default function CodeInput({
           )}
         </div>
 
-        <button
-          onClick={onAnalyze}
-          disabled={isAnalyzing || isUploading || !code.trim()}
-          className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center space-x-2 transition-all duration-200 shadow-md ${
-            isAnalyzing || isUploading || !code.trim()
-              ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-500/25 active:scale-95 cursor-pointer'
-          }`}
-        >
-          {isAnalyzing ? (
-            <>
-              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              <span>Analyzing {files && files.length > 1 ? `${files.length} Files...` : 'Code...'}</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{files && files.length > 1 ? `Analyze All Files (${files.length})` : 'Analyze Code'}</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
+          {/* Phase 2: In-browser & Sandboxed Run Code CTA */}
+          <button
+            type="button"
+            onClick={handleRunCode}
+            disabled={isRunningCode || !code.trim() || isAnalyzing}
+            className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all duration-200 border cursor-pointer ${
+              isRunningCode || !code.trim() || isAnalyzing
+                ? 'bg-slate-800/80 text-slate-500 border-slate-700 cursor-not-allowed opacity-60'
+                : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-600/70 hover:border-emerald-500 active:scale-95 shadow-md shadow-emerald-950/40'
+            }`}
+            title="Execute current code in isolated sandbox (JS, TS, Python, C, C++)"
+          >
+            {isRunningCode ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                <span>Running...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                <span>Run Code</span>
+              </>
+            )}
+          </button>
+
+          {/* AI Code Review Analysis CTA */}
+          <button
+            onClick={onAnalyze}
+            disabled={isAnalyzing || isUploading || !code.trim()}
+            className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center space-x-2 transition-all duration-200 shadow-md ${
+              isAnalyzing || isUploading || !code.trim()
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-500/25 active:scale-95 cursor-pointer'
+            }`}
+          >
+            {isAnalyzing ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Analyzing {files && files.length > 1 ? `${files.length} Files...` : 'Code...'}</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                <span>{files && files.length > 1 ? `Analyze All Files (${files.length})` : 'Analyze Code'}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
     </div>

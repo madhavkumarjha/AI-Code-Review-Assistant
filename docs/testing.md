@@ -46,6 +46,9 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | B40 | Multi-file POST `/api/analyze/multi` | 200; `isMultiFile: true`, aggregate project summary, file-by-file results array |
 | B41 | Large-file chunking (>25,000 chars) | Sectioned review; zero silent truncation; transparent `isIncomplete` flag when exceeding bounds |
 | B42 | Zero-bug clean code review | Returns `bugs: []` without synthetic errors; UI shows `No bugs detected.` |
+| B43 | Sandboxed POST `/api/execute` Python | Executes Python snippet via native process; captures STDOUT & exit code 0 |
+| B44 | POST `/api/execute` Runtime Error | Captures STDERR/Traceback with exit code 1; no server crash |
+| B45 | POST `/api/execute` Timeout Protection | Process killed after 4000ms limit; returns exit code 124 |
 
 ### Frontend — current
 | ID | Case | Expected |
@@ -76,6 +79,9 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | F41 | Project overview dashboard | Displays global score ring, 4-metric counter grid, and file-by-file breakdown |
 | F42 | File audit drill-down | Clicking a file card opens file-specific 4D findings, diff viewer, and refactor |
 | F43 | Clean status badge | Displays `No bugs detected.` when bug count is 0 |
+| F44 | In-browser Web Worker runner | JS/TS executes locally; captures console.log and errors without server network hop |
+| F45 | CodeWorkspaceTerminal drawer | Opens automatically on Run Code; displays STDOUT, STDERR, exit code & timing |
+| F46 | Decoupling disclaimer banner | Explicitly informs user that run success ≠ bug-free code |
 
 ### Non-functional
 | ID | Check | Target |

@@ -86,12 +86,12 @@ Delivered the core end-to-end code analysis experience:
 | **Large-File Chunking Engine** | Overlapping section analysis (>25k chars) with `isIncomplete` disclosure | ✅ Implemented |
 | **Clean Review Indicator** | Zero-bug clean status displays `No bugs detected.` | ✅ Implemented |
 
-### Phase 2 — In-Browser Run Code Workspace (🔲 Next)
+### Phase 2 — In-Browser Run Code Workspace (✅ Implemented)
 | Feature | Scope | Status |
 |---|---|---|
-| **Language Runtime Selector** | JavaScript, TypeScript, Python, C, C++ | 🔲 Queued |
-| **Run Code Terminal** | Output, Errors, and Execution Status panels | 🔲 Queued |
-| **Execution Separation** | Clear boundary: execution success does not equal bug-free code | 🔲 Queued |
+| **Language Runtime Selector** | JavaScript, TypeScript (Web Worker), Python (CPython 3.14), C, C++ | ✅ Implemented |
+| **Run Code Terminal** | Output (STDOUT), Errors (STDERR), Exit code, and timing metrics | ✅ Implemented |
+| **Execution Separation** | Clear boundary: execution success does not equal bug-free code | ✅ Implemented |
 
 ### Phase 3 — Clean Review Status Verification (🔲 Queued)
 | Feature | Scope | Status |

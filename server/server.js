@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 const analyzeRouter = require('./routes/analyze');
+const executeRouter = require('./routes/execute');
 
 // Load environment variables
 dotenv.config();
@@ -88,6 +89,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes with Rate Limiting
 app.use('/api/analyze', apiLimiter, analyzeRouter);
+app.use('/api/execute', executeRouter);
 
 // Centralized JSON Error Handling Middleware (Catches Multer, validation, and request errors)
 app.use((err, req, res, next) => {

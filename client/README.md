@@ -13,10 +13,12 @@ client/src/
 ├── index.css                   # Global styles & Tailwind imports
 ├── utils/
 │   ├── codeFormatter.js       # Newline & escape character normalization
+│   ├── codeRunner.js          # In-browser Web Worker runner & backend executor dispatcher
 │   └── languageDetector.js    # Client-side heuristic syntax & language auto-detection
 └── components/
     ├── Header.jsx              # Sticky header with branding, version, and latency badge
     ├── CodeInput.jsx           # Monaco IDE, multi-file tab bar, bulk file upload, drag-and-drop, presets
+    ├── CodeWorkspaceTerminal.jsx # Sandboxed execution terminal (STDOUT, STDERR, exit codes, disclaimer)
     ├── LanguageDropdown.jsx    # Glassmorphic animated language selector
     ├── AnalysisDashboard.jsx   # Results view: project overview, file tabs, radial score, 4D findings, diff
     ├── ScoreRing.jsx           # Animated radial SVG quality meter

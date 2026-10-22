@@ -91,9 +91,9 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 
 | ID | Requirement | Pri | Release | Status |
 |---|---|---|---|---|
-| FR-25 | In-browser code runner: JS, TS, Python, C, C++ | P0 | 3.0 | 🔲 (Phase 2) |
-| FR-26 | Terminal workspace panels: STDOUT, STDERR, and Execution Status (Exit code) | P0 | 3.0 | 🔲 (Phase 2) |
-| FR-27 | Strict architectural separation: Execution success ≠ Bug-free; 0 bugs ≠ Crash-free | P0 | 3.0 | 🔲 (Phase 2) |
+| FR-25 | In-browser code runner: JS, TS, Python, C, C++ | P0 | 3.0 | ✅ |
+| FR-26 | Terminal workspace panels: STDOUT, STDERR, and Execution Status (Exit code) | P0 | 3.0 | ✅ |
+| FR-27 | Strict architectural separation: Execution success ≠ Bug-free; 0 bugs ≠ Crash-free | P0 | 3.0 | ✅ |
 
 ### 6.4 Export and workflow
 

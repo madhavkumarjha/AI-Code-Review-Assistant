@@ -222,6 +222,54 @@ Performs synchronous multi-file analysis (up to 10 files) generating project-lev
 
 ---
 
+### 4. Sandboxed Code Execution (V3 Feature)
+Executes code in isolated runtimes (Python process, C/C++ compiler/simulator, Node.js fallback) with strict timeout and output interception.
+
+- **Method:** `POST`
+- **Path:** `/api/execute`
+- **Headers:** `Content-Type: application/json`
+
+#### Request Body
+```json
+{
+  "code": "print('Hello, world!')",
+  "language": "Python"
+}
+```
+
+#### Request Safeguards & Execution Limits
+- **Execution Timeout:** Maximum 4000ms. Long-running code or infinite loops are terminated with exit code `124`.
+- **Decoupling Guarantee:** Execution success/failure is strictly independent of AI Code Review results. Passing execution does not imply clean code, and zero bugs does not guarantee crash-free execution.
+- **Client Web Worker Tier:** JavaScript and TypeScript run directly in isolated in-browser Web Workers, bypassing server latency unless fallback is required.
+
+#### Response (200 OK)
+```json
+{
+  "success": true,
+  "status": "Completed",
+  "stdout": "Hello, world!\n",
+  "stderr": "",
+  "exitCode": 0,
+  "executionTimeMs": 240,
+  "runtime": "CPython 3.14 (Sandboxed Process)"
+}
+```
+
+#### Error Response (Timeout / Runtime Error)
+```json
+{
+  "success": false,
+  "status": "Error",
+  "stdout": "",
+  "stderr": "ZeroDivisionError: division by zero",
+  "exitCode": 1,
+  "executionTimeMs": 180,
+  "runtime": "CPython 3.14 (Sandboxed Process)"
+}
+```
+
+---
+
 ## 🟡 v2 API Specification (Planned — Release 2.0)
 
 v2 enhances developer feedback with streaming progress, normalized finding models, and inline explanations.
