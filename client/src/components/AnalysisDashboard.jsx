@@ -527,9 +527,11 @@ export default function AnalysisDashboard({
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Total Files</span>
                 <span className="text-lg font-bold text-slate-100 font-mono">{projectSummary.fileCount}</span>
               </div>
-              <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/20">
-                <span className="text-[10px] text-rose-400 uppercase tracking-wider block font-semibold">Total Bugs</span>
-                <span className="text-lg font-bold text-rose-300 font-mono">{projectSummary.totalBugs}</span>
+              <div className={`p-3 rounded-xl border ${projectSummary.totalBugs === 0 ? 'bg-emerald-950/20 border-emerald-500/20' : 'bg-rose-950/20 border-rose-500/20'}`}>
+                <span className={`text-[10px] uppercase tracking-wider block font-semibold ${projectSummary.totalBugs === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>Total Bugs</span>
+                <span className={`text-lg font-bold font-mono ${projectSummary.totalBugs === 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                  {projectSummary.totalBugs === 0 ? '0 (Clean)' : projectSummary.totalBugs}
+                </span>
               </div>
               <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20">
                 <span className="text-[10px] text-purple-400 uppercase tracking-wider block font-semibold">Security Risks</span>
@@ -580,7 +582,12 @@ export default function AnalysisDashboard({
                         Score: <strong className={file.qualityScore >= 85 ? 'text-emerald-400' : 'text-amber-400'}>{file.qualityScore}/100</strong>
                       </span>
                       <span className="text-slate-400">
-                        {file.bugs?.length || 0} bugs • {file.security?.length || 0} sec
+                        {(!file.bugs || file.bugs.length === 0) ? (
+                          <span className="text-emerald-400 font-semibold">No bugs detected.</span>
+                        ) : (
+                          `${file.bugs.length} bugs`
+                        )}
+                        {file.security?.length > 0 && ` • ${file.security.length} sec`}
                       </span>
                     </div>
 
