@@ -99,8 +99,8 @@ Delivered the core end-to-end code analysis experience:
 | **Exact Clean Status** | Strict `No bugs detected.` message when zero actionable findings | ✅ Implemented |
 | **False-Positive Guard** | Zero duplicate empty cards or synthetic error warnings in project overview & file tabs | ✅ Implemented |
 
-### Phase 4 — Security Sandboxing & Full Regression (🔲 Queued)
+### Phase 4 — Security Sandboxing & Full Regression (✅ Completed)
 | Feature | Scope | Status |
 |---|---|---|
-| **Runtime Isolation** | Execution timeouts, memory limits, and process sandboxing | 🔲 Queued |
-| **V2.5 Feature Regression** | Monaco, Diff Viewer, PDF Export, Presets, Copy/Paste verification | 🔲 Queued |
+| **Runtime Isolation** | Execution timeouts (4000ms), 10KB output caps, rate limiting, process sandboxing | ✅ Completed |
+| **V2.5 Feature Regression** | Monaco, Diff Viewer, PDF Export, Presets, Copy/Paste verification (9/9 passed) | ✅ Completed |

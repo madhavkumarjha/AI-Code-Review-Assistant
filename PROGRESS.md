@@ -99,8 +99,9 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 - [x] **Zero-Bug Guard:** Elimination of synthetic fallback error warnings and false-positive scope checks.
 - [x] **Strict Clean Status Presentation:** Standardized `No bugs detected.` banner in Bugs tab, file audit cards, and `0 (Clean)` badge in project summary grid.
 
-#### Phase 4 — Security Sandboxing & Regression Suite (🔲 Queued)
-- [ ] Timeouts, memory boundaries, and full V2.5 regression suite verification.
+#### Phase 4 — Security Sandboxing & Regression Suite (✅ Complete)
+- [x] **Sandboxed Boundaries:** 4000ms execution timeout against infinite loops, 10KB output buffer cap, 50,000 character code limit, and 60 req / 15 min execution rate limiter.
+- [x] **Regression Suite:** 9/9 regression tests passed covering single-file analysis, explain modal, multi-file batch reviews, Python execution, C++ simulator, timeout handling, and zero-bug reporting.
 
 ---
 
