@@ -157,6 +157,71 @@ Provides deep AI diagnostic analysis and concrete remediation code for a specifi
 
 ---
 
+### 4. Multi-File Repository Review (v3 Phase 1)
+Performs synchronous multi-file analysis (up to 10 files) generating project-level aggregate metrics and file-by-file structured reviews.
+
+- **Method:** `POST`
+- **Path:** `/api/analyze/multi` (also supported by passing `{ files: [...] }` to `/api/analyze`)
+- **Headers:** `Content-Type: application/json` or `multipart/form-data`
+
+#### Request Body (JSON)
+```json
+{
+  "files": [
+    {
+      "filename": "auth.js",
+      "code": "const jwt = require('jsonwebtoken'); ...",
+      "language": "JavaScript"
+    },
+    {
+      "filename": "db.py",
+      "code": "import sqlite3\n...",
+      "language": "Python"
+    }
+  ]
+}
+```
+
+#### Response (200 OK)
+```json
+{
+  "success": true,
+  "isMultiFile": true,
+  "executionTimeMs": 1450,
+  "isFallback": false,
+  "projectSummary": {
+    "overallScore": 92,
+    "summary": "Reviewed 2 file(s) across [JavaScript, Python]. Overall architecture health is strong. Identified 0 total bug(s), 0 security issue(s), and 0 performance bottleneck(s).",
+    "totalBugs": 0,
+    "totalSecurityIssues": 0,
+    "totalPerformanceIssues": 0,
+    "fileCount": 2,
+    "languages": ["JavaScript", "Python"]
+  },
+  "files": [
+    {
+      "filename": "auth.js",
+      "language": "JavaScript",
+      "qualityScore": 90,
+      "isIncomplete": false,
+      "warning": null,
+      "summary": "Clean authentication logic with robust tokens.",
+      "bugs": [],
+      "performance": [],
+      "security": [],
+      "suggestions": [],
+      "refactoredCode": "..."
+    }
+  ]
+}
+```
+
+#### Large File Handling Policy
+- Files exceeding 25,000 characters (~30KB) are dynamically processed via overlapping logical chunks (up to 60,000 characters across 3 sections).
+- If a file exceeds safe processing bounds, the server provides analysis for the analyzed sections and sets `"isIncomplete": true` with a clear `"warning"` message. Files are **never silently truncated**.
+
+---
+
 ## 🟡 v2 API Specification (Planned — Release 2.0)
 
 v2 enhances developer feedback with streaming progress, normalized finding models, and inline explanations.

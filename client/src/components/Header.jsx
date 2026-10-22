@@ -39,7 +39,7 @@ export default function Header({ isAnalyzing }) {
           {/* Model Info */}
           <div className="hidden sm:flex items-center space-x-1.5 bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 px-3 py-1.5 rounded-lg text-xs font-mono shrink-0">
             <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-            <span>AI OS v2.5 • &lt;3s</span>
+            <span>AI OS v3.0 • Multi-File</span>
           </div>
         </div>
 

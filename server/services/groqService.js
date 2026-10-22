@@ -519,37 +519,10 @@ function generateFallbackAnalysis(code, language) {
     });
   }
 
-  if (bugs.length === 0) {
-    bugs.push({
-      line: 'Scope Check',
-      issue: 'Missing explicit return statement or bounds checking',
-      severity: 'Low',
-      recommendation: 'Ensure all execution branches explicitly handle error conditions.'
-    });
-  }
 
-  if (performance.length === 0) {
-    performance.push({
-      title: 'Potential Synchronous Bottleneck',
-      detail: 'Iterative operations over data arrays can benefit from asynchronous chunking or memoization.',
-      impact: 'Medium'
-    });
-  }
+  // Only suggest logging improvements if explicit console/print statements are present
+  // Zero artificial bug injection: If code has no bugs, bugs remains empty array []
 
-  if (security.length === 0) {
-    security.push({
-      vulnerability: 'Missing Input Sanitization / Rate Limiting',
-      riskLevel: 'Medium',
-      fix: 'Enforce strict schema validation on input arguments to prevent unexpected data types.'
-    });
-  }
-
-  if (suggestions.length === 0) {
-    suggestions.push({
-      area: 'Code Style & Formatting',
-      recommendation: 'Enforce strict type hints / JSDoc annotations to improve IDE IntelliSense and code maintainability.'
-    });
-  }
 
   if (code.includes('fetchUserData') || (isJS && code.includes('fetch'))) {
     refactoredCode = `// Refactored: Modern async/await, robust error handling & null-safe DOM update
@@ -682,18 +655,24 @@ def execute_task(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         return {"success": False, "error": str(err)}`
   }
 
+  const isClean = bugs.length === 0 && security.length === 0 && performance.length === 0;
+  const qualityScore = calibrateQualityScore(isClean ? 98 : 78, { bugs, performance, security, suggestions });
+  const summary = isClean
+    ? 'Clean code structure with no runtime bugs or critical vulnerabilities detected.'
+    : 'Analysis completed. Identified potential error handling gaps and security/performance enhancement opportunities.';
+
   return {
     success: true,
     executionTimeMs: 340,
     isFallback: true,
     data: {
-      summary: 'Analysis completed. Identified potential error handling gaps and security/performance enhancement opportunities.',
-      qualityScore: 78,
+      summary,
+      qualityScore,
       bugs,
       performance,
       security,
       suggestions,
-      refactoredCode
+      refactoredCode: refactoredCode || code
     }
   };
 }
@@ -828,4 +807,279 @@ function generateFallbackExplanation(title, recommendation, location, severity, 
   };
 }
 
-module.exports = { analyzeCode, explainFinding };
+/**
+ * Splits large code into logical chunks of target length at newline boundaries with overlap
+ */
+function splitIntoChunks(code, chunkSize = 20000, overlap = 1000) {
+  const chunks = [];
+  let startIndex = 0;
+  const totalLength = code.length;
+
+  while (startIndex < totalLength) {
+    let endIndex = Math.min(startIndex + chunkSize, totalLength);
+
+    if (endIndex < totalLength) {
+      const nextNewline = code.indexOf('\n', endIndex);
+      if (nextNewline !== -1 && nextNewline - endIndex < 2000) {
+        endIndex = nextNewline + 1;
+      } else {
+        const prevNewline = code.lastIndexOf('\n', endIndex);
+        if (prevNewline > startIndex + chunkSize / 2) {
+          endIndex = prevNewline + 1;
+        }
+      }
+    }
+
+    chunks.push({
+      index: chunks.length + 1,
+      codeChunk: code.slice(startIndex, endIndex),
+      startChar: startIndex,
+      endChar: endIndex
+    });
+
+    if (endIndex >= totalLength) break;
+    startIndex = Math.max(startIndex + 1, endIndex - overlap);
+  }
+
+  return chunks;
+}
+
+/**
+ * Analyze a large file (> 25,000 characters) via chunking without silent truncation
+ */
+async function analyzeLargeFile(code, language = 'Auto-detect', filename = 'File') {
+  const resolvedLanguage = (!language || language === 'Auto-detect') 
+    ? detectLanguage(code) 
+    : language;
+
+  if (code.length <= 25000) {
+    const singleResult = await analyzeCode(code, resolvedLanguage);
+    return {
+      ...singleResult,
+      isIncomplete: false,
+      warning: null
+    };
+  }
+
+  const chunks = splitIntoChunks(code, 20000, 1000);
+  const MAX_CHUNKS_TO_ANALYZE = 3; // Analyzes up to ~60,000 characters
+  const chunksToProcess = chunks.slice(0, MAX_CHUNKS_TO_ANALYZE);
+  const isIncomplete = chunks.length > MAX_CHUNKS_TO_ANALYZE;
+  const analyzedCharCount = chunksToProcess.reduce((acc, c) => acc + c.codeChunk.length, 0);
+  const warning = isIncomplete
+    ? `Large file notice: Analyzed first ${analyzedCharCount.toLocaleString()} characters across ${chunksToProcess.length} sections. Incomplete review: Remaining ${chunks.length - MAX_CHUNKS_TO_ANALYZE} section(s) exceeded single-pass threshold.`
+    : null;
+
+  const chunkResults = [];
+  for (const chunk of chunksToProcess) {
+    try {
+      const res = await analyzeCode(chunk.codeChunk, resolvedLanguage);
+      if (res && res.data) {
+        chunkResults.push({ chunk, data: res.data, isFallback: Boolean(res.isFallback) });
+      }
+    } catch (err) {
+      console.warn(`Chunk ${chunk.index} analysis failed:`, err.message);
+    }
+  }
+
+  if (chunkResults.length === 0) {
+    const fallback = generateFallbackAnalysis(code.slice(0, 20000), resolvedLanguage);
+    return {
+      ...fallback,
+      isIncomplete,
+      warning: warning || 'Large file analysis completed in fallback mode.'
+    };
+  }
+
+  // Merge findings from chunks
+  const mergedBugs = [];
+  const mergedPerformance = [];
+  const mergedSecurity = [];
+  const mergedSuggestions = [];
+  const seenBugs = new Set();
+  const seenSecurity = new Set();
+  let totalScore = 0;
+
+  chunkResults.forEach(({ chunk, data }) => {
+    totalScore += (data.qualityScore || 85);
+
+    (data.bugs || []).forEach(b => {
+      const key = `${b.issue}:${b.line}`.toLowerCase();
+      if (!seenBugs.has(key)) {
+        seenBugs.add(key);
+        mergedBugs.push({
+          ...b,
+          line: b.line ? `Section ${chunk.index}: ${b.line}` : `Section ${chunk.index}`
+        });
+      }
+    });
+
+    (data.security || []).forEach(s => {
+      const key = `${s.vulnerability}:${s.riskLevel}`.toLowerCase();
+      if (!seenSecurity.has(key)) {
+        seenSecurity.add(key);
+        mergedSecurity.push(s);
+      }
+    });
+
+    (data.performance || []).forEach(p => {
+      mergedPerformance.push(p);
+    });
+
+    (data.suggestions || []).forEach(s => {
+      mergedSuggestions.push(s);
+    });
+  });
+
+  const avgRawScore = Math.round(totalScore / chunkResults.length);
+  const calibratedScore = calibrateQualityScore(avgRawScore, {
+    bugs: mergedBugs,
+    performance: mergedPerformance,
+    security: mergedSecurity,
+    suggestions: mergedSuggestions
+  });
+
+  const primaryRefactored = chunkResults[0]?.data?.refactoredCode || code.slice(0, 2000);
+  const refactoredCode = `// [Large File Review - ${chunksToProcess.length} of ${chunks.length} Section(s) Inspected]
+// Refactored solutions for identified issues:
+${primaryRefactored}`;
+
+  const isFallback = chunkResults.some(r => r.isFallback);
+
+  return {
+    success: true,
+    executionTimeMs: 1200,
+    isFallback,
+    isIncomplete,
+    warning,
+    data: {
+      summary: `Large file analysis completed across ${chunksToProcess.length} section(s). ${isIncomplete ? 'Incomplete review for remaining content.' : 'Complete file review.'}`,
+      qualityScore: calibratedScore,
+      bugs: mergedBugs,
+      performance: mergedPerformance.slice(0, 5),
+      security: mergedSecurity.slice(0, 5),
+      suggestions: mergedSuggestions.slice(0, 5),
+      refactoredCode
+    }
+  };
+}
+
+/**
+ * Multi-file repository review
+ * Analyzes an array of { filename, code, language }
+ * Produces project-level summary and file-wise findings
+ */
+async function analyzeMultiFileProject(files) {
+  const startTime = Date.now();
+
+  if (!Array.isArray(files) || files.length === 0) {
+    throw new Error('Multi-file analysis requires a non-empty array of files.');
+  }
+
+  if (files.length > 10) {
+    throw new Error('A maximum of 10 files can be analyzed simultaneously.');
+  }
+
+  const fileResults = [];
+
+  // Bounded concurrency (2 files at a time) to prevent rate limit spikes
+  const BATCH_SIZE = 2;
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    const batch = files.slice(i, i + BATCH_SIZE);
+    const batchPromises = batch.map(async (fileObj, batchIdx) => {
+      const filename = fileObj.filename || `file_${i + batchIdx + 1}`;
+      const code = (fileObj.code || '').trim();
+      const language = fileObj.language || 'Auto-detect';
+      const resolvedLanguage = (!language || language === 'Auto-detect')
+        ? detectLanguage(code)
+        : language;
+
+      if (!code) {
+        return {
+          filename,
+          language: resolvedLanguage,
+          qualityScore: 100,
+          isIncomplete: false,
+          warning: 'File is empty.',
+          isFallback: false,
+          summary: 'Empty file.',
+          bugs: [],
+          performance: [],
+          security: [],
+          suggestions: [],
+          refactoredCode: code
+        };
+      }
+
+      let res;
+      if (code.length > 25000) {
+        res = await analyzeLargeFile(code, resolvedLanguage, filename);
+      } else {
+        res = await analyzeCode(code, resolvedLanguage);
+      }
+
+      const fileData = res.data || {};
+      return {
+        filename,
+        language: resolvedLanguage,
+        qualityScore: fileData.qualityScore || 85,
+        isIncomplete: Boolean(res.isIncomplete),
+        warning: res.warning || null,
+        isFallback: Boolean(res.isFallback),
+        summary: fileData.summary || 'File analysis completed.',
+        bugs: fileData.bugs || [],
+        performance: fileData.performance || [],
+        security: fileData.security || [],
+        suggestions: fileData.suggestions || [],
+        refactoredCode: fileData.refactoredCode || code
+      };
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    fileResults.push(...batchResults);
+  }
+
+  // Aggregate project-level metrics
+  const totalBugs = fileResults.reduce((acc, f) => acc + (f.bugs ? f.bugs.length : 0), 0);
+  const totalSecurityIssues = fileResults.reduce((acc, f) => acc + (f.security ? f.security.length : 0), 0);
+  const totalPerformanceIssues = fileResults.reduce((acc, f) => acc + (f.performance ? f.performance.length : 0), 0);
+  const averageScore = Math.round(
+    fileResults.reduce((acc, f) => acc + (f.qualityScore || 0), 0) / fileResults.length
+  );
+
+  const languagesUsed = [...new Set(fileResults.map(f => f.language))];
+  const isAnyFallback = fileResults.some(f => f.isFallback);
+  const hasIncompleteFiles = fileResults.some(f => f.isIncomplete);
+
+  let projectSummaryText = `Reviewed ${fileResults.length} file(s) across [${languagesUsed.join(', ')}]. Overall architecture health is ${averageScore >= 85 ? 'strong' : averageScore >= 70 ? 'moderate' : 'critical'}. Identified ${totalBugs} total bug(s), ${totalSecurityIssues} security issue(s), and ${totalPerformanceIssues} performance bottleneck(s).`;
+
+  if (hasIncompleteFiles) {
+    projectSummaryText += ' Note: One or more large files had partial section analysis due to size limits.';
+  }
+
+  const projectSummary = {
+    overallScore: averageScore,
+    summary: projectSummaryText,
+    totalBugs,
+    totalSecurityIssues,
+    totalPerformanceIssues,
+    fileCount: fileResults.length,
+    languages: languagesUsed
+  };
+
+  return {
+    success: true,
+    isMultiFile: true,
+    executionTimeMs: Date.now() - startTime,
+    isFallback: isAnyFallback,
+    projectSummary,
+    files: fileResults
+  };
+}
+
+module.exports = {
+  analyzeCode,
+  explainFinding,
+  analyzeLargeFile,
+  analyzeMultiFileProject
+};

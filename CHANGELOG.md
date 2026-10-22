@@ -2,6 +2,16 @@
 
 All notable changes are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/). Planned work is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## [Unreleased]
+
+### Added (V3 Phase 1 - Multi-File Review & Large File Chunking)
+- **Multi-File Workspace**: Support for uploading and editing up to 10 files simultaneously via file picker, drag-and-drop, and dynamic `+ Add File` tabs.
+- **`POST /api/analyze/multi`**: Dedicated multi-file batch review endpoint returning project-level aggregate metrics (`overallScore`, `totalBugs`, `totalSecurityIssues`, `totalPerformanceIssues`) and file-by-file structured reviews.
+- **Project-Level Overview Dashboard**: Executive summary card, global metrics grid, and file-by-file breakdown cards with direct drill-down into file-specific findings.
+- **Large-File Chunking Engine**: Overlapping section review for files exceeding 25,000 characters without silent truncation, with transparent `isIncomplete` disclosure when exceeding limits.
+- **Clean Review Status**: Strictly displays `No bugs detected.` when no actionable bugs exist.
+- **Multer Multi-Upload Middleware**: Upgraded file upload capacity from 30KB to 150KB per file with batch processing up to 10 files.
+
 ## [2.5.0]
 
 ### Added

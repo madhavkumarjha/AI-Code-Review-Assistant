@@ -75,9 +75,32 @@ Delivered the core end-to-end code analysis experience:
 
 ---
 
-## 🔮 Release 3.0 — Future Candidates
+## 🚀 Release 3.0 — Autonomous Multi-File Intelligence & Execution (Active on `v3`)
 
-- Multi-file / full directory repository review
-- GitHub Action & Pull Request comment integration
-- Intelligent chunking for large repositories
-- User model choice & custom rules engine
+### Phase 1 — Multi-File Review & Large File Chunking (✅ Implemented)
+| Feature | Scope | Status |
+|---|---|---|
+| **Multi-File Workspace** | Upload/add up to 10 files with active tab switcher | ✅ Implemented |
+| **Project-Level Summary** | Overall score, executive synthesis, and aggregate metric counters | ✅ Implemented |
+| **File-by-File Audit Breakdown** | Per-file findings cards, individual dimensions, and diff inspection | ✅ Implemented |
+| **Large-File Chunking Engine** | Overlapping section analysis (>25k chars) with `isIncomplete` disclosure | ✅ Implemented |
+| **Clean Review Indicator** | Zero-bug clean status displays `No bugs detected.` | ✅ Implemented |
+
+### Phase 2 — In-Browser Run Code Workspace (🔲 Next)
+| Feature | Scope | Status |
+|---|---|---|
+| **Language Runtime Selector** | JavaScript, TypeScript, Python, C, C++ | 🔲 Queued |
+| **Run Code Terminal** | Output, Errors, and Execution Status panels | 🔲 Queued |
+| **Execution Separation** | Clear boundary: execution success does not equal bug-free code | 🔲 Queued |
+
+### Phase 3 — Clean Review Status Verification (🔲 Queued)
+| Feature | Scope | Status |
+|---|---|---|
+| **Exact Clean Status** | Strict `No bugs detected.` message when zero actionable findings | 🔲 Queued |
+| **False-Positive Guard** | Zero duplicate empty cards or synthetic error warnings | 🔲 Queued |
+
+### Phase 4 — Security Sandboxing & Full Regression (🔲 Queued)
+| Feature | Scope | Status |
+|---|---|---|
+| **Runtime Isolation** | Execution timeouts, memory limits, and process sandboxing | 🔲 Queued |
+| **V2.5 Feature Regression** | Monaco, Diff Viewer, PDF Export, Presets, Copy/Paste verification | 🔲 Queued |

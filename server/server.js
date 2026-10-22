@@ -96,7 +96,14 @@ app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       error: 'File Too Large',
-      message: 'Uploaded file exceeds the maximum limit of 30KB (~25,000 characters) for instant analysis.'
+      message: 'Uploaded file exceeds the maximum limit of 150KB for code review.'
+    });
+  }
+
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({
+      error: 'Too Many Files',
+      message: 'A maximum of 10 files can be uploaded per multi-file review batch.'
     });
   }
 

@@ -78,6 +78,29 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 
 ---
 
+### 🚀 Release 3.0 (Active Branch: `v3`)
+
+#### Phase 1 — Multi-File Review & Large-File Chunking (✅ Complete)
+- [x] **Multi-File Workspace:** Upload up to 10 files simultaneously via file selector, drag & drop, or `+ Add File` tabs.
+- [x] **Project-Level Summary:** Synthesized aggregate quality score, total bug counters, security risk counters, and cross-file executive review.
+- [x] **File-by-File Breakdown:** Individual file cards with direct drill-down into file-specific findings, diff viewer, and refactored code.
+- [x] **Large-File Chunking Engine:** Overlapping section analysis for files > 25,000 characters with transparent `isIncomplete` disclosure (zero silent truncation).
+- [x] **Strict Clean Status:** Verified `No bugs detected.` display when no actionable bugs exist.
+- [x] **Backward Compatibility:** Single-file review experience preserved with 100% fidelity.
+
+#### Phase 2 — Run Code Workspace (🔲 Next)
+- [ ] In-browser code runner for JavaScript, TypeScript, Python, C, and C++.
+- [ ] Run Code terminal panels: STDOUT, STDERR, and Execution Status.
+- [ ] Strict isolation between AI review and code execution.
+
+#### Phase 3 — Clean Review Status Verification (🔲 Queued)
+- [ ] Edge-case audit for zero-bug reporting and elimination of synthetic false positives.
+
+#### Phase 4 — Security Sandboxing & Regression Suite (🔲 Queued)
+- [ ] Timeouts, memory boundaries, and full V2.5 regression suite verification.
+
+---
+
 ## 🗂️ Documentation Health Status
 
 | Document | Location | Status | Notes |

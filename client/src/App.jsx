@@ -9,61 +9,152 @@ import { AlertCircle, ChevronRight, Sparkles } from 'lucide-react';
 import { normalizeCodeFormatting } from './utils/codeFormatter';
 
 export default function App() {
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('Auto-detect');
+  const [files, setFiles] = useState([
+    { id: '1', filename: 'main.js', code: '', language: 'Auto-detect' }
+  ]);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
   const [executionTimeMs, setExecutionTimeMs] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  // Active file helpers
+  const activeFile = files[activeFileIndex] || files[0] || { id: '1', filename: 'main.js', code: '', language: 'Auto-detect' };
+  const code = activeFile.code;
+  const language = activeFile.language;
+
   // Enforce dark mode class permanently
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
-  // Automatically format code if input contains literal \n or \r\n escape sequences
+  // Update active file code with newline escape normalization
   const handleSetCode = (input) => {
-    if (typeof input === 'string' && (input.includes('\\n') || input.includes('\\r\\n'))) {
-      setCode(normalizeCodeFormatting(input));
-    } else {
-      setCode(input);
+    const formatted = (typeof input === 'string' && (input.includes('\\n') || input.includes('\\r\\n')))
+      ? normalizeCodeFormatting(input)
+      : input;
+
+    setFiles((prev) => {
+      const next = [...prev];
+      if (next[activeFileIndex]) {
+        next[activeFileIndex] = { ...next[activeFileIndex], code: formatted };
+      }
+      return next;
+    });
+  };
+
+  // Update active file language
+  const handleSetLanguage = (newLang) => {
+    setFiles((prev) => {
+      const next = [...prev];
+      if (next[activeFileIndex]) {
+        next[activeFileIndex] = { ...next[activeFileIndex], language: newLang };
+      }
+      return next;
+    });
+  };
+
+  // Add a new file to the workspace
+  const handleAddFile = () => {
+    if (files.length >= 10) return;
+    const nextIdx = files.length + 1;
+    const newFile = {
+      id: String(Date.now()),
+      filename: `file_${nextIdx}.js`,
+      code: '',
+      language: 'Auto-detect'
+    };
+    setFiles((prev) => [...prev, newFile]);
+    setActiveFileIndex(files.length);
+  };
+
+  // Remove a file from the workspace
+  const handleRemoveFile = (indexToRemove) => {
+    if (files.length <= 1) {
+      setFiles([{ id: '1', filename: 'main.js', code: '', language: 'Auto-detect' }]);
+      setActiveFileIndex(0);
+      return;
+    }
+    setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    if (activeFileIndex >= indexToRemove && activeFileIndex > 0) {
+      setActiveFileIndex(activeFileIndex - 1);
     }
   };
 
-  // Handle Code Analysis Request
+  // Handle Code Analysis Request (Single-file or Multi-file)
   const handleAnalyze = async () => {
-    if (!code.trim()) return;
+    const nonEmptyFiles = files.filter(f => f.code.trim().length > 0);
+    if (nonEmptyFiles.length === 0) return;
 
     setIsAnalyzing(true);
     setErrorMessage(null);
     const startTime = Date.now();
 
     try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          code,
-          language
-        })
-      });
+      if (files.length === 1) {
+        // Classic Single-File Mode (Zero Regression)
+        const singleFile = files[0];
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code: singleFile.code,
+            language: singleFile.language
+          })
+        });
 
-      const resData = await response.json();
+        const resData = await response.json();
 
-      if (!response.ok) {
-        throw new Error(resData.message || 'Failed to complete code review analysis.');
+        if (!response.ok) {
+          throw new Error(resData.message || 'Failed to complete code review analysis.');
+        }
+
+        setAnalysisData({
+          ...resData.data,
+          refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
+          isFallback: Boolean(resData.isFallback),
+          isMultiFile: false
+        });
+      } else {
+        // Multi-File Project Review Mode
+        const response = await fetch('/api/analyze/multi', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            files: files.map(f => ({
+              filename: f.filename,
+              code: f.code,
+              language: f.language
+            }))
+          })
+        });
+
+        const resData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(resData.message || 'Failed to complete multi-file review.');
+        }
+
+        const formattedFiles = (resData.files || []).map(f => ({
+          ...f,
+          refactoredCode: normalizeCodeFormatting(f.refactoredCode)
+        }));
+
+        setAnalysisData({
+          ...resData,
+          files: formattedFiles,
+          isMultiFile: true,
+          qualityScore: resData.projectSummary?.overallScore || 85
+        });
       }
 
-      setAnalysisData({
-        ...resData.data,
-        refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
-        isFallback: Boolean(resData.isFallback)
-      });
-      setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
-      setIsDrawerOpen(true); // Automatically reveal drawer on arrival
+      setExecutionTimeMs(Date.now() - startTime);
+      setIsDrawerOpen(true);
       if (window.innerWidth < 1024) {
         setTimeout(() => {
           document.getElementById('results-drawer-container')?.scrollIntoView({ behavior: 'smooth' });
@@ -77,44 +168,108 @@ export default function App() {
     }
   };
 
-  // Handle File Upload directly via API with Promise resolution to eliminate race condition
-  const handleFileUpload = async (file) => {
+  // Handle File Upload (Single file or multiple files via file dialog or drag-and-drop)
+  const handleFileUpload = async (filesList) => {
     setIsAnalyzing(true);
     setErrorMessage(null);
+    const startTime = Date.now();
 
     try {
-      // Read file content first before sending to API
-      const fileContent = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (err) => reject(err);
-        reader.readAsText(file);
+      const fileArray = Array.from(filesList instanceof FileList ? filesList : [filesList]).slice(0, 10);
+      if (fileArray.length === 0) return;
+
+      const extMap = {
+        '.js': 'JavaScript',
+        '.jsx': 'React JS',
+        '.ts': 'TypeScript',
+        '.tsx': 'React TS',
+        '.py': 'Python',
+        '.java': 'Java',
+        '.cpp': 'C++',
+        '.c': 'C',
+        '.cs': 'C#',
+        '.go': 'Go',
+        '.php': 'PHP',
+        '.html': 'HTML',
+        '.css': 'CSS',
+        '.json': 'JSON',
+        '.rs': 'Rust'
+      };
+
+      const readFilesPromises = fileArray.map(async (file, idx) => {
+        const text = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = (err) => reject(err);
+          reader.readAsText(file);
+        });
+        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        return {
+          id: String(Date.now() + idx),
+          filename: file.name,
+          code: text,
+          language: extMap[ext] || 'Auto-detect'
+        };
       });
 
-      setCode(fileContent);
+      const loadedFiles = await Promise.all(readFilesPromises);
+      setFiles(loadedFiles);
+      setActiveFileIndex(0);
 
-      const formData = new FormData();
-      formData.append('file', file);
+      // Trigger instant review
+      if (loadedFiles.length === 1) {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: loadedFiles[0].code,
+            language: loadedFiles[0].language
+          })
+        });
 
-      const startTime = Date.now();
+        const resData = await response.json();
+        if (!response.ok) {
+          throw new Error(resData.message || 'Failed to analyze uploaded file.');
+        }
 
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData
-      });
+        setAnalysisData({
+          ...resData.data,
+          refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
+          isFallback: Boolean(resData.isFallback),
+          isMultiFile: false
+        });
+      } else {
+        const response = await fetch('/api/analyze/multi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            files: loadedFiles.map(f => ({
+              filename: f.filename,
+              code: f.code,
+              language: f.language
+            }))
+          })
+        });
 
-      const resData = await response.json();
+        const resData = await response.json();
+        if (!response.ok) {
+          throw new Error(resData.message || 'Failed to analyze uploaded files.');
+        }
 
-      if (!response.ok) {
-        throw new Error(resData.message || 'Failed to analyze uploaded file.');
+        const formattedFiles = (resData.files || []).map(f => ({
+          ...f,
+          refactoredCode: normalizeCodeFormatting(f.refactoredCode)
+        }));
+
+        setAnalysisData({
+          ...resData,
+          files: formattedFiles,
+          isMultiFile: true,
+          qualityScore: resData.projectSummary?.overallScore || 85
+        });
       }
 
-      setAnalysisData({
-        ...resData.data,
-        refactoredCode: normalizeCodeFormatting(resData.data?.refactoredCode),
-        isFallback: Boolean(resData.isFallback)
-      });
-      setExecutionTimeMs(resData.executionTimeMs || (Date.now() - startTime));
+      setExecutionTimeMs(Date.now() - startTime);
       setIsDrawerOpen(true);
       if (window.innerWidth < 1024) {
         setTimeout(() => {
@@ -123,7 +278,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('File upload error:', err);
-      setErrorMessage(err.message || 'Failed to analyze uploaded file.');
+      setErrorMessage(err.message || 'Failed to analyze uploaded file(s).');
     } finally {
       setIsAnalyzing(false);
     }
@@ -173,10 +328,15 @@ export default function App() {
                 code={code}
                 setCode={handleSetCode}
                 language={language}
-                setLanguage={setLanguage}
+                setLanguage={handleSetLanguage}
                 onAnalyze={handleAnalyze}
                 isAnalyzing={isAnalyzing}
                 onFileUpload={handleFileUpload}
+                files={files}
+                activeFileIndex={activeFileIndex}
+                onSelectFile={setActiveFileIndex}
+                onAddFile={handleAddFile}
+                onRemoveFile={handleRemoveFile}
               />
             </div>
 
@@ -196,6 +356,9 @@ export default function App() {
                     executionTimeMs={executionTimeMs}
                     rawCode={code}
                     language={language}
+                    files={files}
+                    activeFileIndex={activeFileIndex}
+                    onSelectFile={setActiveFileIndex}
                     onClose={() => setIsDrawerOpen(false)}
                   />
                 </motion.div>

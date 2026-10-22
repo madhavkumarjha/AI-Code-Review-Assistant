@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import PropTypes from 'prop-types';
-import { Play, Upload, Trash2, Code2, Sparkles, Loader2, X, Copy, Check } from 'lucide-react';
+import { Play, Upload, Trash2, Code2, Sparkles, Loader2, X, Copy, Check, Plus, FileCode, Layers } from 'lucide-react';
 import { SAMPLE_PRESETS } from './SamplePresets';
 import { detectCodeLanguage } from '../utils/languageDetector';
 import LanguageDropdown from './LanguageDropdown';
@@ -42,13 +42,19 @@ export default function CodeInput({
   setLanguage,
   onAnalyze,
   isAnalyzing,
-  onFileUpload
+  onFileUpload,
+  files = null,
+  activeFileIndex = 0,
+  onSelectFile = null,
+  onAddFile = null,
+  onRemoveFile = null
 }) {
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const handleCopyCode = () => {
     if (!code) return;
@@ -158,11 +164,38 @@ export default function CodeInput({
   };
 
   const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
       setIsUploading(true);
       try {
-        await onFileUpload(file);
+        await onFileUpload(selectedFiles);
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDraggingOver) setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setIsUploading(true);
+      try {
+        await onFileUpload(e.dataTransfer.files);
       } finally {
         setIsUploading(false);
       }
@@ -170,7 +203,22 @@ export default function CodeInput({
   };
 
   return (
-    <div className="glass-panel rounded-2xl p-3.5 sm:p-5 border border-slate-800 flex flex-col h-auto lg:h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full">
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`glass-panel rounded-2xl p-3.5 sm:p-5 border flex flex-col h-auto lg:h-full min-h-0 shadow-2xl relative overflow-hidden w-full max-w-full transition-all duration-200 ${
+        isDraggingOver ? 'border-cyan-400 bg-cyan-950/20 ring-2 ring-cyan-500/30' : 'border-slate-800'
+      }`}
+    >
+      {/* Drag & Drop Overlay Indicator */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-2 border-2 border-dashed border-cyan-400 rounded-2xl pointer-events-none">
+          <Upload className="w-8 h-8 text-cyan-400 animate-bounce" />
+          <span className="text-sm font-semibold text-cyan-200">Drop code files to review</span>
+          <span className="text-xs text-slate-400 font-mono">Supports up to 10 files (.js, .py, .java, .cpp, .ts, etc.)</span>
+        </div>
+      )}
       
       {/* Top Bar Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 mb-3 shrink-0 w-full">
@@ -190,8 +238,21 @@ export default function CodeInput({
           )}
         </div>
 
-        {/* Action Buttons: Mode Toggle, Upload & Clear */}
+        {/* Action Buttons: Mode Toggle, Add File, Upload & Clear */}
         <div className="flex items-center space-x-1.5 sm:space-x-2">
+          {onAddFile && (
+            <button
+              onClick={onAddFile}
+              disabled={isAnalyzing || (files && files.length >= 10)}
+              type="button"
+              className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-50 text-cyan-300 border border-slate-700 transition-all shadow-sm shrink-0 cursor-pointer"
+              title="Add another file to workspace (Max 10 files)"
+            >
+              <Plus className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-[11px] hidden sm:inline">Add File</span>
+            </button>
+          )}
+
           <button
             onClick={toggleEditorMode}
             type="button"
@@ -219,6 +280,7 @@ export default function CodeInput({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
+            multiple
             accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.cs,.go,.html,.css,.txt"
             className="hidden"
           />
@@ -227,7 +289,7 @@ export default function CodeInput({
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isAnalyzing}
             className="inline-flex items-center space-x-1.5 text-xs font-medium px-2.5 sm:px-3 py-2 min-h-[40px] rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-50 text-slate-300 hover:text-white border border-slate-700 transition-all shadow-sm shrink-0 cursor-pointer"
-            title="Upload code file (.js, .py, .java, .cpp)"
+            title="Upload code file(s) (.js, .py, .java, .cpp)"
           >
             {isUploading ? (
               <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
@@ -251,6 +313,55 @@ export default function CodeInput({
         </div>
 
       </div>
+
+      {/* Multi-File Tab Bar (Displayed when workspace contains multiple files) */}
+      {files && files.length > 1 && (
+        <div className="flex items-center space-x-1.5 mb-2.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-800 shrink-0 w-full">
+          <div className="flex items-center space-x-1.5 min-w-max">
+            {files.map((file, idx) => {
+              const isActive = idx === activeFileIndex;
+              return (
+                <div
+                  key={file.id || idx}
+                  className={`group flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all border cursor-pointer ${
+                    isActive
+                      ? 'bg-cyan-950/70 border-cyan-500/60 text-cyan-200 shadow-md shadow-cyan-500/10'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
+                  }`}
+                  onClick={() => onSelectFile && onSelectFile(idx)}
+                >
+                  <FileCode className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                  <span className="truncate max-w-[120px]">{file.filename || `file_${idx + 1}`}</span>
+                  {files.length > 1 && onRemoveFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFile(idx);
+                      }}
+                      className="p-0.5 rounded hover:bg-rose-950 hover:text-rose-400 text-slate-500 transition-colors cursor-pointer"
+                      title="Remove file"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {onAddFile && files.length < 10 && (
+              <button
+                type="button"
+                onClick={onAddFile}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs bg-slate-900/40 hover:bg-slate-800 border border-dashed border-slate-700 text-slate-400 hover:text-cyan-300 transition-all cursor-pointer"
+                title="Add another file"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Add</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 1-Click Sample Presets */}
       <div className="mb-3 shrink-0 w-full">
@@ -406,6 +517,11 @@ export default function CodeInput({
       {/* Footer Info & Analyze CTA */}
       <div className="mt-3 sm:mt-3.5 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 shrink-0 w-full">
         <div className="text-xs text-slate-500 font-mono flex items-center space-x-2">
+          {files && files.length > 1 && (
+            <span className="text-cyan-400 font-semibold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">
+              File {activeFileIndex + 1} of {files.length}
+            </span>
+          )}
           <span>{lineCount} lines</span>
           <span>•</span>
           <span>{code.length} chars</span>
@@ -417,7 +533,7 @@ export default function CodeInput({
                 onClick={() => setCode('')}
                 disabled={isAnalyzing}
                 className="inline-flex items-center space-x-1 text-[11px] text-slate-400 hover:text-rose-400 active:scale-95 transition-colors cursor-pointer"
-                title="Clear all code"
+                title="Clear current file code"
               >
                 <X className="w-3 h-3 text-rose-400" />
                 <span>Clear</span>
@@ -438,12 +554,12 @@ export default function CodeInput({
           {isAnalyzing ? (
             <>
               <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              <span>Analyzing Code...</span>
+              <span>Analyzing {files && files.length > 1 ? `${files.length} Files...` : 'Code...'}</span>
             </>
           ) : (
             <>
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Analyze Code</span>
+              <span>{files && files.length > 1 ? `Analyze All Files (${files.length})` : 'Analyze Code'}</span>
             </>
           )}
         </button>
@@ -460,5 +576,10 @@ CodeInput.propTypes = {
   setLanguage: PropTypes.func.isRequired,
   onAnalyze: PropTypes.func.isRequired,
   isAnalyzing: PropTypes.bool.isRequired,
-  onFileUpload: PropTypes.func.isRequired
+  onFileUpload: PropTypes.func.isRequired,
+  files: PropTypes.array,
+  activeFileIndex: PropTypes.number,
+  onSelectFile: PropTypes.func,
+  onAddFile: PropTypes.func,
+  onRemoveFile: PropTypes.func
 };
