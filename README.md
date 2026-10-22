@@ -10,12 +10,15 @@
 
 ## 🌟 Key Features
 
+- 📁 **Multi-File Workspace (V3):** Add, upload, or drag-and-drop up to 10 files simultaneously with dynamic tabs and file-specific findings drill-down.
+- 📊 **Project-Level Executive Dashboard (V3):** Global quality score, cross-file architectural summary, and aggregate metric counters (Total Bugs, Security Risks, Performance Flaws).
+- 🧩 **Large-File Chunking Engine (V3):** Overlapping section analysis for files exceeding 25,000 characters up to 150KB with transparent `isIncomplete` disclosure (zero silent truncation).
 - 🐛 **4-Dimensional Code Review:** Analyzes code for Bugs & Syntax Errors, Performance Bottlenecks, Security Risks, and Best Practice Suggestions.
+- 🛡️ **Clean Review Status:** Displays strict `No bugs detected.` when no actionable issues exist—zero synthetic false-positives.
 - ⚡ **Sub-3-Second Latency:** Ultra-fast neural inference pipeline running at 300+ tokens/sec.
 - 🛠️ **Instant Code Refactoring:** Generates clean, production-ready refactored code with inline comments and type safety hints.
 - 🔍 **Git-Style Diff Viewer:** Inspect before-and-after improvements side-by-side or unified with colorized syntax chunks.
 - 💻 **Monaco Code Editor:** Full IDE experience with syntax highlighting, line numbers, and multi-language support.
-- 📁 **File Upload Support:** Upload `.js`, `.py`, `.java`, `.cpp`, `.ts`, `.go` files directly via stream parser.
 - 🎯 **1-Click Portfolio Demo Presets:** Test pre-built buggy JavaScript, inefficient Python, SQL/XSS risk, and C++ memory leak snippets in one click.
 - 📄 **Executive PDF Export:** Download professional audit reports with quality scores and breakdown summaries using `jsPDF`.
 - 🌙 **Sleek Dark Mode UI:** Modern glassmorphism developer dashboard UI built with Tailwind CSS & Framer Motion.

@@ -29,7 +29,7 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | B11 | Model returns invalid JSON | Clear error (2.0: one retry first) |
 | B12 | `/api/health` | `groqConfigured` matches env |
 
-### Backend — 2.0
+### Backend — 2.0 & 3.0
 | ID | Case | Expected |
 |---|---|---|
 | B20 | Severity normalizer | High/Critical → critical, Medium → warning, Low → info |
@@ -43,6 +43,9 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | B28 | Fallback response | Labelled; never cached |
 | B29 | ~300-line refactor | Not truncated; valid JSON |
 | B30 | Log inspection | No submitted code in logs |
+| B40 | Multi-file POST `/api/analyze/multi` | 200; `isMultiFile: true`, aggregate project summary, file-by-file results array |
+| B41 | Large-file chunking (>25,000 chars) | Sectioned review; zero silent truncation; transparent `isIncomplete` flag when exceeding bounds |
+| B42 | Zero-bug clean code review | Returns `bugs: []` without synthetic errors; UI shows `No bugs detected.` |
 
 ### Frontend — current
 | ID | Case | Expected |
@@ -69,6 +72,10 @@ Scope follows [PRD.md](../PRD.md); schedule follows [ROADMAP.md](ROADMAP.md). "C
 | F29 | Fallback banner | Shown for demo reviews; export blocked or watermarked |
 | F30 | Reduced motion | Ring does not animate |
 | F31 | Ctrl/Cmd+Enter | Triggers Analyze |
+| F40 | Multi-file tabs | Add file (`+ Add File`), switch tabs, remove files, up to 10 files |
+| F41 | Project overview dashboard | Displays global score ring, 4-metric counter grid, and file-by-file breakdown |
+| F42 | File audit drill-down | Clicking a file card opens file-specific 4D findings, diff viewer, and refactor |
+| F43 | Clean status badge | Displays `No bugs detected.` when bug count is 0 |
 
 ### Non-functional
 | ID | Check | Target |

@@ -29,18 +29,21 @@ A developer tool that uses Groq-hosted LLMs to review code in seconds: it finds 
 
 | Goals | Non-goals (for now) |
 |---|---|
-| Instant, structured, actionable review | Auth / accounts / database |
-| Clear severity and quality signals | Multi-file or repository-wide review |
-| Show exactly what changed (diff) | GitHub / PR integration |
-| Free and open-source stack | Mobile app (separate project) |
-| Honest failure behaviour (never a fake review presented as real) | Configurable rate limits, model picker |
+| Instant, structured, actionable review | Auth / user accounts / database |
+| Multi-file repository review (up to 10 files) | GitHub Action / automated PR integration |
+| In-browser code execution workspace (JS, TS, Python, C, C++) | Dedicated cloud VM provisioning |
+| Clean review signals (`No bugs detected.` when bug-free) | Mobile native app (separate project) |
+| Large-file chunking without silent truncation | Configurable rate limits |
+| Show exactly what changed (diff viewer) | Model picker in UI |
+| Free and open-source stack | |
+| Honest failure behaviour (never a fake review presented as real) | |
 
 ## 4. Personas
 
 | Persona | Use case |
 |---|---|
-| Solo developer | Quick feedback on code quality |
-| Team lead | Reviews PRs before merging |
+| Solo developer | Quick feedback on code quality & runtime execution |
+| Team lead | Reviews multi-file PRs before merging |
 | Open-source contributor | Checks code before submitting a PR |
 | Hiring manager | Evaluates candidate code |
 
@@ -62,6 +65,8 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 | FR-04 | Monaco editor: syntax highlighting, line numbers, auto-indent (lazy-loaded) | P0 | 2.5 | ✅ |
 | FR-05 | Language auto-detect from content (heuristics for 12+ languages, user override) | P0 | 2.5 | ✅ |
 | FR-06 | Analyze on paste (debounced, off by default) | P2 | 2.x | 🔲 (Backlog) |
+| FR-07 | Multi-file workspace tabs (add, switch, and delete up to 10 files) | P0 | 3.0 | ✅ |
+| FR-08 | Multi-file drag-and-drop & bulk file upload (`multiple` attribute) | P0 | 3.0 | ✅ |
 
 ### 6.2 Analysis and results
 
@@ -78,8 +83,19 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 | FR-18 | "Explain more" per finding (real AI diagnostic explanation modal) | P1 | 2.5 | ✅ |
 | FR-19 | AI disclaimer shown beside results | P0 | 1.0 | ✅ |
 | FR-20 | Demo/fallback reviews are clearly labelled and never exported as real | P0 | 2.5 | ✅ |
+| FR-21 | Project-level summary card & file-by-file audit breakdown for multi-file reviews | P0 | 3.0 | ✅ |
+| FR-22 | Large-file chunking (>25k chars up to 150KB) with explicit incomplete review notice | P0 | 3.0 | ✅ |
+| FR-23 | Clean review status: strictly `No bugs detected.` when zero actionable bugs found | P0 | 3.0 | ✅ |
 
-### 6.3 Export and workflow
+### 6.3 Code Execution (V3 Workspace)
+
+| ID | Requirement | Pri | Release | Status |
+|---|---|---|---|---|
+| FR-25 | In-browser code runner: JS, TS, Python, C, C++ | P0 | 3.0 | 🔲 (Phase 2) |
+| FR-26 | Terminal workspace panels: STDOUT, STDERR, and Execution Status (Exit code) | P0 | 3.0 | 🔲 (Phase 2) |
+| FR-27 | Strict architectural separation: Execution success ≠ Bug-free; 0 bugs ≠ Crash-free | P0 | 3.0 | 🔲 (Phase 2) |
+
+### 6.4 Export and workflow
 
 | ID | Requirement | Pri | Release | Status |
 |---|---|---|---|---|
@@ -88,16 +104,6 @@ Status: ✅ shipped · 🔲 planned · 💤 future. "Release" is the release tha
 | FR-32 | Share (native share or copy link) | P2 | 1.0 | ✅ |
 | FR-33 | Download Markdown and JSON | P1 | 2.0 | 🔲 |
 | FR-34 | History: last 10 analyses, **opt-in, metadata only** (no raw code by default) | P1 | 2.0 | 🔲 |
-
-### 6.4 Future
-
-| Feature | Release |
-|---|---|
-| Multi-file upload | 3.0 |
-| GitHub PR integration | 3.0 |
-| Chunking for long files (lifts the 25,000-char limit) | 3.0 |
-| Model choice and configurable rate limiting | 3.0 |
-| VS Code extension, custom rules, team features, complexity metrics | Backlog |
 
 ## 7. Non-functional requirements
 

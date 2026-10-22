@@ -8,16 +8,17 @@ The frontend client is a single-page developer dashboard built with **React 18**
 
 ```
 client/src/
-├── App.jsx                     # Top-level state (code, language, results, loading, errors)
+├── App.jsx                     # Top-level state (multi-file state, active index, review analysis, drawer)
 ├── main.jsx                    # Application entry point
 ├── index.css                   # Global styles & Tailwind imports
 ├── utils/
+│   ├── codeFormatter.js       # Newline & escape character normalization
 │   └── languageDetector.js    # Client-side heuristic syntax & language auto-detection
 └── components/
-    ├── Header.jsx              # Sticky header with branding and latency badge
-    ├── CodeInput.jsx           # Monaco code editor, file uploader, presets
+    ├── Header.jsx              # Sticky header with branding, version, and latency badge
+    ├── CodeInput.jsx           # Monaco IDE, multi-file tab bar, bulk file upload, drag-and-drop, presets
     ├── LanguageDropdown.jsx    # Glassmorphic animated language selector
-    ├── AnalysisDashboard.jsx   # Results view: radial score, tabs, 4D finding cards, refactored code
+    ├── AnalysisDashboard.jsx   # Results view: project overview, file tabs, radial score, 4D findings, diff
     ├── ScoreRing.jsx           # Animated radial SVG quality meter
     ├── DiffViewer.jsx          # Side-by-side & unified Git diff inspector
     ├── ExplainModal.jsx        # On-demand AI diagnostic explanation modal

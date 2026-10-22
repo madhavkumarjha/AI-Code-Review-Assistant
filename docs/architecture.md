@@ -33,11 +33,15 @@ graph TD
 | File | Responsibility |
 |---|---|
 | `server/server.js` | env check, CORS, rate limiter, body parsers (5 MB), `/api/health`, mounts router |
-| `server/routes/analyze.js` | accept JSON or file, resolve language, validate, sanitize control chars, cache, call service |
-| `server/middleware/upload.js` | Multer memory storage, 30 KB (~25k chars), extension / `text/*` allow-list |
-| `server/services/groqService.js` | prompt, language heuristic, model chain, JSON parse, shape enforcement, fallback review |
+| `server/routes/analyze.js` | accept JSON or file(s), `/api/analyze` & `/api/analyze/multi`, resolve language, validate, sanitize control chars, cache, call service |
+| `server/middleware/upload.js` | Multer memory storage, 150 KB per file, max 10 files, extension / `text/*` allow-list |
+| `server/services/groqService.js` | multi-file aggregation, large-file chunking (>25k chars), model chain, JSON parse, shape enforcement, clean review status |
 
-**Request lifecycle:** rate limit → Multer (if file) → validate (non-empty, ≤ 25,000 chars) → sanitize → cache lookup → resolve language → Groq call (chain, temperature 0.2, `max_tokens` 1500) → parse (strip ```json fences) → enforce shape → cache (non-fallback only) → respond with `executionTimeMs`.
+**Request lifecycle:** rate limit → Multer (if file upload) → validate (non-empty, ≤ 150 KB) → sanitize → cache lookup (SHA-256 hash) → resolve language → Groq call / chunking → parse (strip ```json fences) → enforce shape → cache (non-fallback only) → respond with `executionTimeMs`.
+
+**Multi-file lifecycle:** batch validation (1-10 files) → bounded concurrency execution (2 files at a time) → aggregate project summary (overall score, total bugs/security/performance metrics) → per-file structured findings → unified JSON payload.
+
+**Large-file lifecycle:** files > 25,000 characters are processed across overlapping logical sections (up to ~60,000 chars) → merged deduplicated findings → transparent `isIncomplete` flag when exceeding window.
 
 **Model chain:** tried in order until one returns content. 429 → rate-limit error. Auth / 400 / model errors → fallback review. The list is configuration and must be verified against Groq's current catalog before each release.
 
@@ -45,11 +49,14 @@ graph TD
 
 | Component | Role |
 |---|---|
-| `App.jsx` | state (code, language, analysis, timing, error), calls `/api/analyze`, file upload, 40/60 layout |
-| `Header` | sticky title bar |
-| `CodeInput` | editor, language select, upload, presets, Analyze / Clear |
-| `LoadingView` | four-stage animated loader |
-| `AnalysisDashboard` | summary, score, tabs, sections, disclaimer |
+| `App.jsx` | state (`files` array, `activeFileIndex`, review analysis, timing, error), dual-mode runner (`/api/analyze` & `/api/analyze/multi`), 40/60 layout |
+| `Header` | sticky title bar, v3 status badge, engine indicator |
+| `CodeInput` | Monaco IDE, multi-file tab bar (`+ Add File`), bulk uploader, drag-and-drop, presets, dynamic CTA |
+| `LanguageDropdown` | glassmorphic animated language selector |
+| `AnalysisDashboard` | project-level overview, file tabs, radial score, 4D finding cards, clean `No bugs detected.` status |
+| `DiffViewer` | side-by-side & unified Git diff inspector |
+| `ExplainModal` | on-demand AI diagnostic explanation modal |
+| `ProgressToast` | real-time multi-stage analysis progress indicator |
 | `ExportPanel` | copy Markdown, copy refactored code, PDF (jsPDF), share |
 | `ErrorBoundary` | crash isolation |
 | `SamplePresets.js` | four demo snippets |
