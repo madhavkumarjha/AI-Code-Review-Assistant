@@ -6,8 +6,9 @@
 |---|---|
 | **Owner** | Madhav |
 | **Status** | Active |
-| **Last updated** | 2026-10-12 |
-| **Platform** | Desktop web (mobile out of scope; handled separately via Expo) |
+| **Last updated** | 2026-10-22 |
+| **Current Release** | 3.0 (v3 branch); V4 planned for next week |
+| **Platform** | Desktop web (mobile responsive fallback) |
 
 ---
 
@@ -191,4 +192,5 @@ Per-release gates and test cases are in [docs/testing.md](docs/testing.md). A re
 
 | Date | Change |
 |---|---|
+| 2026-10-22 | V3 specification complete (multi-file, code execution workspace, clean review status); V4 planned for next week |
 | 2026-10-11 | Consolidated former `prd.md` and `prdv2.md` into this single document; release scoping moved to ROADMAP.md |

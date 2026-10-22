@@ -34,6 +34,7 @@ graph TD
 |---|---|
 | `server/server.js` | env check, CORS, rate limiter, body parsers (5 MB), `/api/health`, mounts router |
 | `server/routes/analyze.js` | accept JSON or file(s), `/api/analyze` & `/api/analyze/multi`, resolve language, validate, sanitize control chars, cache, call service |
+| `server/routes/execute.js` | sandboxed execution runner (`/api/execute`), Python subprocess, C/C++ simulator, Node runner, 4000ms timeout |
 | `server/middleware/upload.js` | Multer memory storage, 150 KB per file, max 10 files, extension / `text/*` allow-list |
 | `server/services/groqService.js` | multi-file aggregation, large-file chunking (>25k chars), model chain, JSON parse, shape enforcement, clean review status |
 
@@ -51,7 +52,8 @@ graph TD
 |---|---|
 | `App.jsx` | state (`files` array, `activeFileIndex`, review analysis, timing, error), dual-mode runner (`/api/analyze` & `/api/analyze/multi`), 40/60 layout |
 | `Header` | sticky title bar, v3 status badge, engine indicator |
-| `CodeInput` | Monaco IDE, multi-file tab bar (`+ Add File`), bulk uploader, drag-and-drop, presets, dynamic CTA |
+| `CodeInput` | Monaco IDE, multi-file tab bar (`+ Add File`), bulk uploader, drag-and-drop, presets, dynamic CTA, Run Code trigger |
+| `CodeWorkspaceTerminal` | sandboxed execution terminal, STDOUT, STDERR/Stack trace, Exit code, timing, decoupling disclaimer |
 | `LanguageDropdown` | glassmorphic animated language selector |
 | `AnalysisDashboard` | project-level overview, file tabs, radial score, 4D finding cards, clean `No bugs detected.` status |
 | `DiffViewer` | side-by-side & unified Git diff inspector |
@@ -71,7 +73,7 @@ State is local React hooks; no global store.
 - **Parsing:** tolerate fenced JSON; fill missing keys with defaults; `qualityScore` defaults to 75 when non-numeric.
 - **Fallback mode:** when the key is missing/placeholder or Groq returns auth/400/model errors, a canned review is generated and flagged `isFallback: true`. It is never cached.
 
-## 6. Target architecture for release 2.0
+## 6. Target architecture for Release 4.0 (V4 — Launching Next Week)
 
 ```mermaid
 graph TD

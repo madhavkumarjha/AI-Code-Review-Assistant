@@ -6,8 +6,8 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 
 ## 🚦 Current Status Overview
 
-- **Active Milestone:** Transitioning from **Release 1.0 (Production)** to **Release 2.0 (Phase 0)**
-- **Latest Release:** `v1.0.0` (See [CHANGELOG.md](CHANGELOG.md))
+- **Active Milestone:** Release 3.0 Completed; Preparing for **Release 4.0 (V4) Launching Next Week**
+- **Latest Release:** `v3.0.0` (Complete on branch `v3`, see [CHANGELOG.md](CHANGELOG.md))
 - **Production Status:** Stable on Vercel (Frontend) and Render (Backend API)
 - **Product Blueprint:** [PRD.md](PRD.md)
 - **Detailed Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md)
@@ -102,6 +102,16 @@ This document is the **Live Status Dashboard** for the AI Code Review Assistant.
 #### Phase 4 — Security Sandboxing & Regression Suite (✅ Complete)
 - [x] **Sandboxed Boundaries:** 4000ms execution timeout against infinite loops, 10KB output buffer cap, 50,000 character code limit, and 60 req / 15 min execution rate limiter.
 - [x] **Regression Suite:** 9/9 regression tests passed covering single-file analysis, explain modal, multi-file batch reviews, Python execution, C++ simulator, timeout handling, and zero-bug reporting.
+
+---
+
+### 🔮 Release 4.0 (V4 — Launching Next Week)
+
+- [ ] **Real-Time Streaming Reviews (`POST /api/v2/analyze/stream`):** Progressive Server-Sent Events (SSE) streaming review stages to client.
+- [ ] **Interactive Terminal REPL (STDIN):** Support keyboard interaction during live Python/JS script execution.
+- [ ] **Public GitHub Repository Review:** Import and review entire public repositories via URL.
+- [ ] **Multi-Format Export Suite:** Download raw JSON alongside Markdown and PDF reports.
+- [ ] **Opt-in Client Session History:** Local metadata-only persistence for past 10 review sessions.
 
 ---
 

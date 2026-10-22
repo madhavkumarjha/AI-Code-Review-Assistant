@@ -104,3 +104,15 @@ Delivered the core end-to-end code analysis experience:
 |---|---|---|
 | **Runtime Isolation** | Execution timeouts (4000ms), 10KB output caps, rate limiting, process sandboxing | ✅ Completed |
 | **V2.5 Feature Regression** | Monaco, Diff Viewer, PDF Export, Presets, Copy/Paste verification (9/9 passed) | ✅ Completed |
+
+---
+
+## 🔮 Release 4.0 — Real-Time Streaming & Deep Integrations (Launching Next Week)
+
+| Feature | Scope | Target Release | Status |
+|---|---|---|---|
+| **Real-Time Streaming Review** | Chunked Server-Sent Events (`/api/v2/analyze/stream`) with section-by-section live feedback | 4.0 | 🔲 Planned |
+| **Interactive Terminal REPL** | Dynamic STDIN support in `CodeWorkspaceTerminal` for interactive user prompts | 4.0 | 🔲 Planned |
+| **Public GitHub Repo Review** | Fetch and audit public repositories directly via repository URL | 4.0 | 🔲 Planned |
+| **Multi-Format Export Suite** | Download audit reports in Markdown, JSON, and PDF simultaneously | 4.0 | 🔲 Planned |
+| **Client Session History** | Privacy-preserving local metadata history (opt-in, max 10 entries) | 4.0 | 🔲 Planned |

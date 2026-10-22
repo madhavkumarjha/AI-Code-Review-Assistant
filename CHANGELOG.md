@@ -2,14 +2,32 @@
 
 All notable changes are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/). Planned work is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## [Unreleased]
+## [Unreleased] (Planned for V4 - Launching Next Week)
+
+### Planned (V4 Features)
+- **Real-Time SSE Streaming Review**: Progressive chunked streaming of review stages via Server-Sent Events (`POST /api/v2/analyze/stream`).
+- **Interactive Terminal REPL (STDIN)**: Support for interactive keyboard input during Python and JavaScript code execution in `CodeWorkspaceTerminal`.
+- **Public GitHub Repository Import**: 1-click import and batch multi-file review of public open-source repositories via GitHub REST API.
+- **Project-Wide Multi-Format Export**: One-click download of full multi-file audit reports in structured JSON, GitHub-flavored Markdown, and consolidated PDF.
+- **Privacy-Preserving History**: Local client-only audit history tracking recent analyses (metadata only, zero code persistence).
+
+---
+
+## [3.0.0] - 2026-10-22
+
+### Added (V3 Phase 4 - Security Sandboxing & 9-Point Regression)
+- **Runtime Sandboxing**: Strict 4000ms infinite-loop timeout protection (exit code `124`), 10KB output buffer cap, 50k character limit, and 60 req/15 min rate limiter.
+- **Verified Regression Suite**: Automated verification across 9 critical integration points (Health, Single-file, Multi-file, Explain, Python, C++, Timeouts, Clean status).
+
+### Added (V3 Phase 3 - Clean Review Result Verification)
+- **Strict Clean Review Presentation**: Standardized `✓ No bugs detected.` message across single-file review, multi-file breakdown cards, and `0 (Clean)` project badges.
+- **Elimination of Synthetic Warnings**: Cleaned fallback generator to guarantee zero false-positive or artificial "Scope Check" bugs when user code is clean.
 
 ### Added (V3 Phase 2 - Run Code Workspace & Sandboxed Runtimes)
 - **Run Code Workspace**: Editor integrated "Run Code" execution button with real-time terminal output, execution status, and timing metrics.
 - **In-Browser Web Worker Runtime**: Ultra-fast isolated browser sandbox for JavaScript and TypeScript execution with captured STDOUT (`console.log`) and STDERR (`console.error`).
 - **Secure Sandboxed Backend Runner (`POST /api/execute`)**: Backend execution runner supporting Python (`CPython 3.14`), C/C++ (compiler check & safe standard I/O simulator), and isolated Node.js fallback.
 - **Strict Decoupling Policy & UI Disclaimer**: Explicit contract and disclaimer clarifying that code execution success does not imply bug-free code, and zero AI findings does not guarantee crash-free execution.
-- **4000ms Infinite-Loop & Timeout Protection**: Hard process timeout protection terminating frozen or infinite-loop scripts with exit code `124`.
 - **Dedicated Terminal Component (`CodeWorkspaceTerminal`)**: Multi-tab output terminal with tabs for STDOUT, STDERR/Stack Trace, exit code display, and one-click clear.
 
 ### Added (V3 Phase 1 - Multi-File Review & Large File Chunking)
@@ -17,7 +35,6 @@ All notable changes are documented here. Format follows [Keep a Changelog](https
 - **`POST /api/analyze/multi`**: Dedicated multi-file batch review endpoint returning project-level aggregate metrics (`overallScore`, `totalBugs`, `totalSecurityIssues`, `totalPerformanceIssues`) and file-by-file structured reviews.
 - **Project-Level Overview Dashboard**: Executive summary card, global metrics grid, and file-by-file breakdown cards with direct drill-down into file-specific findings.
 - **Large-File Chunking Engine**: Overlapping section review for files exceeding 25,000 characters without silent truncation, with transparent `isIncomplete` disclosure when exceeding limits.
-- **Clean Review Status**: Strictly displays `No bugs detected.` when no actionable bugs exist.
 - **Multer Multi-Upload Middleware**: Upgraded file upload capacity from 30KB to 150KB per file with batch processing up to 10 files.
 
 ## [2.5.0]

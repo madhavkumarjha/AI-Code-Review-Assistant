@@ -11,6 +11,8 @@
 ## 🌟 Key Features
 
 - 📁 **Multi-File Workspace (V3):** Add, upload, or drag-and-drop up to 10 files simultaneously with dynamic tabs and file-specific findings drill-down.
+- ⚡ **In-Browser & Sandboxed Execution Workspace (V3):** Run code directly with instant terminal feedback. In-browser isolated Web Worker for JS/TS; secure sandboxed process for Python (`CPython 3.14`), C/C++ simulator, and Node.js.
+- 🖥️ **Live Execution Terminal (V3):** Integrated drawer showing STDOUT, STDERR/Stack trace, Exit code, execution timer (ms), and strict decoupling disclaimer (*code execution success $\neq$ bug-free code*).
 - 📊 **Project-Level Executive Dashboard (V3):** Global quality score, cross-file architectural summary, and aggregate metric counters (Total Bugs, Security Risks, Performance Flaws).
 - 🧩 **Large-File Chunking Engine (V3):** Overlapping section analysis for files exceeding 25,000 characters up to 150KB with transparent `isIncomplete` disclosure (zero silent truncation).
 - 🐛 **4-Dimensional Code Review:** Analyzes code for Bugs & Syntax Errors, Performance Bottlenecks, Security Risks, and Best Practice Suggestions.
