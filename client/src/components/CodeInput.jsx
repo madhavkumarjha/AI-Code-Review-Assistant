@@ -99,7 +99,7 @@ export default function CodeInput({
       const saved = sessionStorage.getItem('preferred_editor_mode');
       if (saved !== null) return saved === 'monaco';
     } catch (_) {}
-    return !isMobileDevice();
+    return false; // Default to fast native editor (0ms load, zero CDN dependency)
   });
 
   const toggleEditorMode = () => {

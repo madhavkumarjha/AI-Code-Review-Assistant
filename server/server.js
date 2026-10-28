@@ -30,6 +30,7 @@ app.set('trust proxy', trustProxyVal);
 const allowedOrigins = [
   'https://ai-code-review-assistant-sand.vercel.app',
   'https://review-assistant-sand.vercel.app',
+  'https://anna.partners',
   process.env.ALLOWED_ORIGIN,
   process.env.CLIENT_URL
 ].filter(Boolean);
@@ -42,6 +43,19 @@ app.use(cors({
     // Allow explicitly defined origins
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       return callback(null, true);
+    }
+
+    // Allow https://anna.partners and any https://*.anna.partners subdomain
+    try {
+      const parsed = new URL(origin);
+      if (
+        parsed.protocol === 'https:' &&
+        (parsed.hostname === 'anna.partners' || parsed.hostname.endsWith('.anna.partners'))
+      ) {
+        return callback(null, true);
+      }
+    } catch {
+      // Ignore invalid URL
     }
 
     // Allow localhost during local development
